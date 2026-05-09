@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/booking_model.dart';
 
-
+/// Handles all Firestore operations for bookings — create, read, update status, delete.
+/// 
 class BookingService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
