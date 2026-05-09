@@ -20,8 +20,8 @@ class BookSessionSheet extends StatefulWidget {
 class _BookSessionSheetState extends State<BookSessionSheet> {
   String? _selectedSubject;
   String? _selectedSlot;
-  final _noteCtrl = TextEditingController();
-  bool _isLoading = false;
+  final _noteCtrl  = TextEditingController();
+  bool    _isLoading = false;
   // Use BookingService directly — no provider needed in the sheet
   final _bookingService = BookingService();
 
@@ -39,16 +39,18 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
       final auth = context.read<AuthProvider>();
 
       final booking = BookingModel(
-        id: '',
-        studentId: auth.user!.uid,
+        id:          '',
+        studentId:   auth.user!.uid,
         studentName: auth.user!.name,
-        tutorId: widget.tutor.uid,
-        tutorName: widget.tutor.name,
-        subject: _selectedSubject!,
-        slot: _selectedSlot!,
-        status: BookingStatus.pending,
-        createdAt: DateTime.now(),
-        note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+        tutorId:     widget.tutor.uid,
+        tutorName:   widget.tutor.name,
+        subject:     _selectedSubject!,
+        slot:        _selectedSlot!,
+        status:      BookingStatus.pending,
+        createdAt:   DateTime.now(),
+        note: _noteCtrl.text.trim().isEmpty
+            ? null
+            : _noteCtrl.text.trim(),
       );
 
       await _bookingService.createBooking(booking);
@@ -58,11 +60,13 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
             'Booking request sent to ${widget.tutor.name}!',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.white),
+            style: AppTextStyles.bodyMedium
+                .copyWith(color: AppColors.white),
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
+          shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.mdAll),
           margin: const EdgeInsets.all(16),
         ));
       }
@@ -71,11 +75,13 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
             'Failed to book: ${e.toString()}',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.white),
+            style: AppTextStyles.bodyMedium
+                .copyWith(color: AppColors.white),
           ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
+          shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.mdAll),
           margin: const EdgeInsets.all(16),
         ));
       }
@@ -89,13 +95,11 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.white,
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xxl)),
       ),
       padding: EdgeInsets.fromLTRB(
-        24,
-        16,
-        24,
+        24, 16, 24,
         MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: SingleChildScrollView(
@@ -106,8 +110,7 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
             // Handle bar
             Center(
               child: Container(
-                width: 40,
-                height: 4,
+                width: 40, height: 4,
                 decoration: BoxDecoration(
                   color: AppColors.grey200,
                   borderRadius: AppRadius.fullAll,
@@ -116,29 +119,34 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
             ),
             const SizedBox(height: 20),
 
-            Text('Book a session', style: AppTextStyles.headlineMedium),
-            Text('with ${widget.tutor.name}', style: AppTextStyles.bodyMedium),
+            Text('Book a session',
+                style: AppTextStyles.headlineMedium),
+            Text('with ${widget.tutor.name}',
+                style: AppTextStyles.bodyMedium),
             const SizedBox(height: 24),
 
-            // Subject picker
+            // ── Subject picker ──────────────────────────────────
             Text('Subject', style: AppTextStyles.labelLarge),
             const SizedBox(height: 10),
             widget.tutor.subjects.isEmpty
-                ? Text('No subjects listed.', style: AppTextStyles.bodyMedium)
+                ? Text('No subjects listed.',
+                    style: AppTextStyles.bodyMedium)
                 : Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: 8, runSpacing: 8,
                     children: widget.tutor.subjects.map((s) {
                       final active = s == _selectedSubject;
                       return GestureDetector(
-                        onTap: () => setState(() => _selectedSubject = s),
+                        onTap: () =>
+                            setState(() => _selectedSubject = s),
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
+                          duration:
+                              const Duration(milliseconds: 180),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color:
-                                active ? AppColors.primary : AppColors.grey50,
+                            color: active
+                                ? AppColors.primary
+                                : AppColors.grey50,
                             borderRadius: AppRadius.fullAll,
                             border: Border.all(
                               color: active
@@ -147,7 +155,8 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
                             ),
                           ),
                           child: Text(s,
-                              style: AppTextStyles.labelLarge.copyWith(
+                              style: AppTextStyles.labelLarge
+                                  .copyWith(
                                 color: active
                                     ? AppColors.white
                                     : AppColors.grey700,
@@ -163,16 +172,18 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
             Text('Available slot', style: AppTextStyles.labelLarge),
             const SizedBox(height: 10),
             widget.tutor.availability.isEmpty
-                ? Text('No slots available.', style: AppTextStyles.bodyMedium)
+                ? Text('No slots available.',
+                    style: AppTextStyles.bodyMedium)
                 : Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: 8, runSpacing: 8,
                     children: widget.tutor.availability.map((slot) {
                       final active = slot == _selectedSlot;
                       return GestureDetector(
-                        onTap: () => setState(() => _selectedSlot = slot),
+                        onTap: () =>
+                            setState(() => _selectedSlot = slot),
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
+                          duration:
+                              const Duration(milliseconds: 180),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
@@ -188,7 +199,8 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
                             ),
                           ),
                           child: Text(slot,
-                              style: AppTextStyles.bodyMedium.copyWith(
+                              style: AppTextStyles.bodyMedium
+                                  .copyWith(
                                 color: active
                                     ? AppColors.primary
                                     : AppColors.grey700,
@@ -201,13 +213,14 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
             const SizedBox(height: 24),
 
             // ── Note ────────────────────────────────────────────
-            Text('Note (optional)', style: AppTextStyles.labelLarge),
+            Text('Note (optional)',
+                style: AppTextStyles.labelLarge),
             const SizedBox(height: 8),
             TextField(
               controller: _noteCtrl,
               maxLines: 2,
-              style:
-                  AppTextStyles.bodyMedium.copyWith(color: AppColors.grey900),
+              style: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.grey900),
               decoration: InputDecoration(
                 hintText: 'e.g. I need help with integration…',
                 hintStyle: AppTextStyles.bodyMedium,
@@ -216,13 +229,14 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
 
             const SizedBox(height: 28),
 
-            // Confirm button
+            // ── Confirm button ───────────────────────────────────
             AppButton(
               label: 'Confirm Booking',
               isLoading: _isLoading,
-              onPressed: (_selectedSubject != null && _selectedSlot != null)
-                  ? _confirm
-                  : null,
+              onPressed:
+                  (_selectedSubject != null && _selectedSlot != null)
+                      ? _confirm
+                      : null,
             ),
 
             // Helper text when nothing selected yet
