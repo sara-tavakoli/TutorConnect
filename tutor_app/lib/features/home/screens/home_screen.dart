@@ -7,7 +7,6 @@ import '../../bookings/screens/bookings_screen.dart';
 import '../../map/screens/map_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 
-//Add the Map tab to the bottom navigation.
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,6 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
     BookingsScreen(),
     ProfileScreen(),
   ];
+
+  //Add the Map tab to the bottom navigation.
 
   @override
   Widget build(BuildContext context) {

@@ -7,6 +7,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../models/tutor_model.dart';
 import '../../../services/tutor_service.dart';
+import '../../../services/location_service.dart';
 import '../../auth/providers/auth_provider.dart';
 
 class EditTutorProfileScreen extends StatefulWidget {
@@ -28,7 +29,10 @@ class _EditTutorProfileScreenState
 
   List<String> _subjects     = [];
   List<String> _availability = [];
-  bool         _isLoading    = false;
+  double?      _latitude;
+  double?      _longitude;
+  bool         _isLoading        = false;
+  bool         _isLoadingLocation = false;
 
   @override
   void initState() {
@@ -39,6 +43,8 @@ class _EditTutorProfileScreenState
     _yearCtrl.text = widget.tutor.year ?? '';
     _subjects      = List.from(widget.tutor.subjects);
     _availability  = List.from(widget.tutor.availability);
+    _latitude      = widget.tutor.latitude;
+    _longitude     = widget.tutor.longitude;
   }
 
   @override
@@ -46,6 +52,47 @@ class _EditTutorProfileScreenState
     _bioCtrl.dispose();  _rateCtrl.dispose();
     _uniCtrl.dispose();  _yearCtrl.dispose();
     super.dispose();
+  }
+
+  // Gets current GPS position and saves it
+  Future<void> _setLocation() async {
+    setState(() => _isLoadingLocation = true);
+    final location = LocationService();
+    final position = await location.getCurrentPosition();
+
+    if (position != null) {
+      setState(() {
+        _latitude  = position.latitude;
+        _longitude = position.longitude;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Location set successfully!',
+              style: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.white)),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.mdAll),
+          margin: const EdgeInsets.all(16),
+        ));
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Could not get location. Check permissions.',
+              style: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.white)),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.mdAll),
+          margin: const EdgeInsets.all(16),
+        ));
+      }
+    }
+    setState(() => _isLoadingLocation = false);
   }
 
   Future<void> _save() async {
@@ -64,6 +111,8 @@ class _EditTutorProfileScreenState
       subjects:     _subjects,
       availability: _availability,
       name:         auth.user!.name,
+      latitude:     _latitude,
+      longitude:    _longitude,
     );
 
     await TutorService().updateTutor(updated);
@@ -86,6 +135,8 @@ class _EditTutorProfileScreenState
 
   @override
   Widget build(BuildContext context) {
+    final hasLocation = _latitude != null && _longitude != null;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -111,8 +162,9 @@ class _EditTutorProfileScreenState
                 hint: 'Tell students about yourself…',
                 controller: _bioCtrl,
                 maxLines: 4,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Bio is required.' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty
+                        ? 'Bio is required.' : null,
               ),
               const SizedBox(height: 20),
 
@@ -148,7 +200,82 @@ class _EditTutorProfileScreenState
               ),
               const SizedBox(height: 24),
 
-              Text('Subjects', style: AppTextStyles.labelLarge),
+              // ── Location section ──────────────────────────
+              Text('Campus location',
+                  style: AppTextStyles.labelLarge),
+              const SizedBox(height: 4),
+              Text(
+                'Students will see your distance and your pin on the map.',
+                style: AppTextStyles.bodySmall,
+              ),
+              const SizedBox(height: 12),
+
+              // Location status card
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: hasLocation
+                      ? AppColors.successSurface
+                      : AppColors.grey50,
+                  borderRadius: AppRadius.lgAll,
+                  border: Border.all(
+                    color: hasLocation
+                        ? AppColors.success
+                        : AppColors.grey200,
+                  ),
+                ),
+                child: Row(children: [
+                  Icon(
+                    hasLocation
+                        ? Icons.location_on_rounded
+                        : Icons.location_off_rounded,
+                    color: hasLocation
+                        ? AppColors.success
+                        : AppColors.grey400,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      hasLocation
+                          ? 'Location set — visible on map'
+                          : 'No location set yet',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: hasLocation
+                            ? AppColors.success
+                            : AppColors.grey500,
+                      ),
+                    ),
+                  ),
+                  if (hasLocation)
+                    GestureDetector(
+                      onTap: () => setState(() {
+                        _latitude  = null;
+                        _longitude = null;
+                      }),
+                      child: const Icon(Icons.close_rounded,
+                          color: AppColors.grey400, size: 18),
+                    ),
+                ]),
+              ),
+              const SizedBox(height: 10),
+
+              // Set location button
+              AppButton(
+                label: hasLocation
+                    ? 'Update my location'
+                    : 'Set my location',
+                variant: AppButtonVariant.outlined,
+                icon: Icons.my_location_rounded,
+                isLoading: _isLoadingLocation,
+                onPressed: _setLocation,
+                height: 44,
+              ),
+
+              const SizedBox(height: 24),
+
+              Text('Subjects',
+                  style: AppTextStyles.labelLarge),
               const SizedBox(height: 10),
               SubjectTagInput(
                 subjects: _subjects,
