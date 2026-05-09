@@ -4,6 +4,8 @@ import '../providers/tutor_provider.dart';
 import '../widgets/tutor_card.dart';
 import '../widgets/subject_filter_chips.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/skeleton_card.dart';
+import '../../../core/widgets/empty_state.dart';
 import 'tutor_detail_screen.dart';
 
 class TutorFeedScreen extends StatelessWidget {
@@ -29,7 +31,7 @@ class _TutorFeedView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // ── App bar ───────────────────────────────────────────────
+          // App bar
           SliverAppBar(
             floating: true,
             snap: true,
@@ -38,49 +40,73 @@ class _TutorFeedView extends StatelessWidget {
             elevation: 0,
             expandedHeight: 120,
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              title: Text('Find a Tutor', style: AppTextStyles.headlineMedium),
+              titlePadding:
+                  const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              title: Text('Find a Tutor',
+                  style: AppTextStyles.headlineMedium),
               expandedTitleScale: 1.2,
             ),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(56),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                padding:
+                    const EdgeInsets.fromLTRB(24, 0, 24, 12),
                 child: _SearchBar(),
               ),
             ),
           ),
 
-          // ── Subject filter chips ──────────────────────────────────
+          // Subject filter chips
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: SubjectFilterChips(
-                subjects: provider.allSubjects,
-                selected: provider.selectedSubject,
-                onSelected: provider.setSubjectFilter,
-              ),
+              child: provider.isLoading
+                  ? const SizedBox(height: 36)
+                  : SubjectFilterChips(
+                      subjects:   provider.allSubjects,
+                      selected:   provider.selectedSubject,
+                      onSelected: provider.setSubjectFilter,
+                    ),
             ),
           ),
 
-          // ── Results count ─────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-              child: Text(
-                '${provider.filteredTutors.length} tutors available',
-                style: AppTextStyles.bodySmall,
+          // Results count 
+          if (!provider.isLoading)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding:
+                    const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                child: Text(
+                  '${provider.filteredTutors.length} tutor${provider.filteredTutors.length == 1 ? '' : 's'} available',
+                  style: AppTextStyles.bodySmall,
+                ),
               ),
             ),
-          ),
 
-          // ── Tutor list ────────────────────────────────────────────
+          // Loading skeletons 
           if (provider.isLoading)
-            const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (_, __) => const SkeletonCard(),
+                childCount: 4,
+              ),
             )
+
+          // ── Empty state ───────────────────────────────────────
           else if (provider.filteredTutors.isEmpty)
-            SliverFillRemaining(child: _EmptyState())
+            SliverFillRemaining(
+              child: EmptyState(
+                icon:    Icons.search_off_rounded,
+                title:   'No tutors found',
+                message: 'Try a different subject or search term.',
+                buttonLabel: provider.selectedSubject != 'All'
+                    ? 'Clear filter'
+                    : null,
+                onButtonTap: provider.clearFilters,
+              ),
+            )
+
+          // Tutor list 
           else
             SliverList(
               delegate: SliverChildBuilderDelegate(
@@ -91,7 +117,8 @@ class _TutorFeedView extends StatelessWidget {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TutorDetailScreen(tutor: tutor),
+                        builder: (_) =>
+                            TutorDetailScreen(tutor: tutor),
                       ),
                     ),
                   );
@@ -100,7 +127,8 @@ class _TutorFeedView extends StatelessWidget {
               ),
             ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          const SliverToBoxAdapter(
+              child: SizedBox(height: 24)),
         ],
       ),
     );
@@ -119,45 +147,20 @@ class _SearchBar extends StatelessWidget {
       ),
       child: TextField(
         onChanged: provider.setSearchQuery,
-        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey900),
+        style: AppTextStyles.bodyMedium
+            .copyWith(color: AppColors.grey900),
         decoration: InputDecoration(
           hintText: 'Search by name or subject…',
           hintStyle: AppTextStyles.bodyMedium,
           prefixIcon: const Icon(Icons.search_rounded,
               color: AppColors.grey400, size: 20),
-          border: InputBorder.none,
+          border:        InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 10),
           filled: false,
         ),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 72, height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.primarySurface,
-              borderRadius: AppRadius.xxlAll,
-            ),
-            child: const Icon(Icons.search_off_rounded,
-                color: AppColors.primary, size: 36),
-          ),
-          const SizedBox(height: 16),
-          Text('No tutors found', style: AppTextStyles.titleMedium),
-          const SizedBox(height: 8),
-          Text('Try a different subject or search term.',
-              style: AppTextStyles.bodyMedium),
-        ],
       ),
     );
   }
