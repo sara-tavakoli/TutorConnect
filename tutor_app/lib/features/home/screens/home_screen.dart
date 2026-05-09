@@ -4,7 +4,10 @@ import '../../auth/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../tutors/screens/tutor_feed_screen.dart';
 import '../../bookings/screens/bookings_screen.dart';
+import '../../map/screens/map_screen.dart';
 import '../../profile/screens/profile_screen.dart';
+
+//Add the Map tab to the bottom navigation.
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,28 +19,22 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  static const List<Widget> _studentPages = [
+  static const List<Widget> _pages = [
     TutorFeedScreen(),
+    MapScreen(),
     BookingsScreen(),
-    ProfileScreen(),
-  ];
-
-  static const List<Widget> _tutorPages = [
-    TutorFeedScreen(),   // Browse other tutors
-    BookingsScreen(),    // Manage incoming bookings
     ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final auth   = context.watch<AuthProvider>();
+    final auth    = context.watch<AuthProvider>();
     final isTutor = auth.user?.isTutor ?? false;
-    final pages  = isTutor ? _tutorPages : _studentPages;
 
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: pages,
+        children: _pages,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -55,25 +52,32 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _NavItem(
-                  icon: Icons.search_rounded,
+                  icon:       Icons.search_rounded,
                   activeIcon: Icons.search_rounded,
-                  label: 'Browse',
-                  selected: _currentIndex == 0,
+                  label:      'Browse',
+                  selected:   _currentIndex == 0,
                   onTap: () => setState(() => _currentIndex = 0),
                 ),
                 _NavItem(
-                  icon: Icons.calendar_today_outlined,
-                  activeIcon: Icons.calendar_today_rounded,
-                  label: isTutor ? 'Requests' : 'Bookings',
-                  selected: _currentIndex == 1,
+                  icon:       Icons.map_outlined,
+                  activeIcon: Icons.map_rounded,
+                  label:      'Map',
+                  selected:   _currentIndex == 1,
                   onTap: () => setState(() => _currentIndex = 1),
                 ),
                 _NavItem(
-                  icon: Icons.person_outline_rounded,
-                  activeIcon: Icons.person_rounded,
-                  label: 'Profile',
-                  selected: _currentIndex == 2,
+                  icon:       Icons.calendar_today_outlined,
+                  activeIcon: Icons.calendar_today_rounded,
+                  label:      isTutor ? 'Requests' : 'Bookings',
+                  selected:   _currentIndex == 2,
                   onTap: () => setState(() => _currentIndex = 2),
+                ),
+                _NavItem(
+                  icon:       Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
+                  label:      'Profile',
+                  selected:   _currentIndex == 3,
+                  onTap: () => setState(() => _currentIndex = 3),
                 ),
               ],
             ),
@@ -84,12 +88,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ── Nav item ──────────────────────────────────────────────────────────────
 class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  final bool selected;
+  final IconData   icon;
+  final IconData   activeIcon;
+  final String     label;
+  final bool       selected;
   final VoidCallback onTap;
 
   const _NavItem({
@@ -107,9 +110,12 @@ class _NavItem extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primarySurface : Colors.transparent,
+          color: selected
+              ? AppColors.primarySurface
+              : Colors.transparent,
           borderRadius: AppRadius.fullAll,
         ),
         child: Column(
@@ -117,15 +123,21 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               selected ? activeIcon : icon,
-              color: selected ? AppColors.primary : AppColors.grey400,
+              color: selected
+                  ? AppColors.primary
+                  : AppColors.grey400,
               size: 22,
             ),
             const SizedBox(height: 3),
             Text(
               label,
               style: AppTextStyles.labelSmall.copyWith(
-                color: selected ? AppColors.primary : AppColors.grey400,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected
+                    ? AppColors.primary
+                    : AppColors.grey400,
+                fontWeight: selected
+                    ? FontWeight.w700
+                    : FontWeight.w500,
               ),
             ),
           ],
