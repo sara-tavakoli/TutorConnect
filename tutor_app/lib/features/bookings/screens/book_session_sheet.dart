@@ -1,0 +1,210 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/booking_provider.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../models/booking_model.dart';
+import '../../../models/tutor_model.dart';
+import '../../../features/auth/providers/auth_provider.dart';
+
+//A bottom sheet that slides up when a student taps Book. They pick a subject, choose a time slot, add an optional note, then confirm.
+
+class BookSessionSheet extends StatefulWidget {
+  final TutorModel tutor;
+  const BookSessionSheet({super.key, required this.tutor});
+
+  @override
+  State<BookSessionSheet> createState() => _BookSessionSheetState();
+}
+
+class _BookSessionSheetState extends State<BookSessionSheet> {
+  String? _selectedSubject;
+  String? _selectedSlot;
+  final _noteCtrl = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _noteCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _confirm() async {
+    if (_selectedSubject == null || _selectedSlot == null) return;
+
+    setState(() => _isLoading = true);
+
+    final auth = context.read<AuthProvider>();
+    final booking = context.read<BookingProvider>();
+
+    final newBooking = BookingModel(
+      id: '',
+      studentId: auth.user!.uid,
+      studentName: auth.user!.name,
+      tutorId: widget.tutor.uid,
+      tutorName: widget.tutor.name,
+      subject: _selectedSubject!,
+      slot: _selectedSlot!,
+      status: BookingStatus.pending,
+      createdAt: DateTime.now(),
+      note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+    );
+
+    await booking.createBooking(newBooking);
+    setState(() => _isLoading = false);
+
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Booking request sent to ${widget.tutor.name}!',
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.white)),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
+        margin: const EdgeInsets.all(16),
+      ));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => BookingProvider(),
+      child: Builder(builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadius.xxl)),
+          ),
+          padding: EdgeInsets.fromLTRB(
+              24, 16, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.grey200,
+                      borderRadius: AppRadius.fullAll,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text('Book a session', style: AppTextStyles.headlineMedium),
+                Text('with ${widget.tutor.name}',
+                    style: AppTextStyles.bodyMedium),
+                const SizedBox(height: 24),
+
+                // Subject picker
+                Text('Subject', style: AppTextStyles.labelLarge),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: widget.tutor.subjects.map((s) {
+                    final active = s == _selectedSubject;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedSubject = s),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: active ? AppColors.primary : AppColors.grey50,
+                          borderRadius: AppRadius.fullAll,
+                          border: Border.all(
+                            color:
+                                active ? AppColors.primary : AppColors.grey200,
+                          ),
+                        ),
+                        child: Text(s,
+                            style: AppTextStyles.labelLarge.copyWith(
+                              color:
+                                  active ? AppColors.white : AppColors.grey700,
+                            )),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Slot picker
+                Text('Available slot', style: AppTextStyles.labelLarge),
+                const SizedBox(height: 10),
+                widget.tutor.availability.isEmpty
+                    ? Text('No slots available',
+                        style: AppTextStyles.bodyMedium)
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: widget.tutor.availability.map((slot) {
+                          final active = slot == _selectedSlot;
+                          return GestureDetector(
+                            onTap: () => setState(() => _selectedSlot = slot),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: active
+                                    ? AppColors.primarySurface
+                                    : AppColors.grey50,
+                                borderRadius: AppRadius.mdAll,
+                                border: Border.all(
+                                  color: active
+                                      ? AppColors.primary
+                                      : AppColors.grey200,
+                                  width: active ? 1.5 : 1,
+                                ),
+                              ),
+                              child: Text(slot,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: active
+                                        ? AppColors.primary
+                                        : AppColors.grey700,
+                                  )),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                const SizedBox(height: 24),
+
+                // Optional note
+                Text('Note (optional)', style: AppTextStyles.labelLarge),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _noteCtrl,
+                  maxLines: 2,
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.grey900),
+                  decoration: InputDecoration(
+                    hintText: 'e.g. I need help with integration…',
+                    hintStyle: AppTextStyles.bodyMedium,
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                AppButton(
+                  label: 'Confirm Booking',
+                  onPressed: (_selectedSubject != null && _selectedSlot != null)
+                      ? _confirm
+                      : null,
+                  isLoading: _isLoading,
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
+  }
+}
