@@ -125,7 +125,7 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
                 style: AppTextStyles.bodyMedium),
             const SizedBox(height: 24),
 
-            // ── Subject picker ──────────────────────────────────
+            // Subject picker 
             Text('Subject', style: AppTextStyles.labelLarge),
             const SizedBox(height: 10),
             widget.tutor.subjects.isEmpty
@@ -212,7 +212,7 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
 
             const SizedBox(height: 24),
 
-            // ── Note ────────────────────────────────────────────
+            // Note
             Text('Note (optional)',
                 style: AppTextStyles.labelLarge),
             const SizedBox(height: 8),
@@ -229,7 +229,7 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
 
             const SizedBox(height: 28),
 
-            // ── Confirm button ───────────────────────────────────
+            //  Confirm button 
             AppButton(
               label: 'Confirm Booking',
               isLoading: _isLoading,

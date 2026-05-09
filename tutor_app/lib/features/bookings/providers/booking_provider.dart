@@ -56,4 +56,5 @@ class BookingProvider extends ChangeNotifier {
   Future<void> deleteBooking(String bookingId) async {
     await _service.deleteBooking(bookingId);
   }
+  
 }

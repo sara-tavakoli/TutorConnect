@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/booking_model.dart';
 
 /// Handles all Firestore operations for bookings — create, read, update status, delete.
-/// 
+
 class BookingService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
@@ -16,7 +16,6 @@ class BookingService {
     return _db
         .collection('bookings')
         .where('studentId', isEqualTo: studentId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => BookingModel.fromMap(d.data(), d.id))
@@ -28,7 +27,6 @@ class BookingService {
     return _db
         .collection('bookings')
         .where('tutorId', isEqualTo: tutorId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => BookingModel.fromMap(d.data(), d.id))
