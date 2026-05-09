@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
+// Uploads a photo file to Firebase Storage and returns the download URL to save in Firestore.
+
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final ImagePicker _picker = ImagePicker();
