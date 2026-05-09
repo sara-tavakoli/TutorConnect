@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
+import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/splash_screen.dart';
+import 'features/home/screens/home_screen.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -20,16 +22,37 @@ class TutorConnectApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-      ],
+    return ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
       child: MaterialApp(
         title: 'TutorConnect',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
-        home: const SplashScreen(),
+        home: const _RootRouter(),
       ),
     );
+  }
+}
+
+/// Listens to AuthProvider and automatically shows the
+/// correct screen based on auth state — no manual navigation needed.
+class _RootRouter extends StatelessWidget {
+  const _RootRouter();
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
+    switch (auth.status) {
+      case AuthStatus.unknown:
+        // Still checking Firebase — show splash
+        return const SplashScreen();
+      case AuthStatus.authenticated:
+        // Logged in — go straight to home
+        return const HomeScreen();
+      case AuthStatus.unauthenticated:
+        // Not logged in — show login
+        return const LoginScreen();
+    }
   }
 }
