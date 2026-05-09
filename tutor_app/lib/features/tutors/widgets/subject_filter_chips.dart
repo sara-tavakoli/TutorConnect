@@ -31,15 +31,14 @@ class SubjectFilterChips extends StatelessWidget {
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color:  isActive ? AppColors.primary : AppColors.white,
+                color: isActive ? AppColors.primary : AppColors.white,
                 borderRadius: AppRadius.fullAll,
                 border: Border.all(
                   color: isActive ? AppColors.primary : AppColors.grey200,
                   width: 1.5,
                 ),
               ),
-              child: Text(
-                subject,
+              child: Text(subject,
                 style: AppTextStyles.labelLarge.copyWith(
                   color: isActive ? AppColors.white : AppColors.grey600,
                   fontSize: 13,

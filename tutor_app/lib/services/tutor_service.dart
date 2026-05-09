@@ -4,7 +4,6 @@ import '../models/tutor_model.dart';
 class TutorService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Real-time stream of all tutors
   Stream<List<TutorModel>> getTutors() {
     return _db.collection('tutors').snapshots().map((snap) =>
         snap.docs.map((d) => TutorModel.fromMap(d.data(), d.id)).toList());
