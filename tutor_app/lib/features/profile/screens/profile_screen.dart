@@ -74,7 +74,7 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Email row
+            // Email
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -102,75 +102,8 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             // Tutor-only section
-            if (isTutor)
-              FutureBuilder<TutorModel?>(
-                future: TutorService().getTutorById(user!.uid),
-                builder: (context, snap) {
-                  if (!snap.hasData) {
-                    return const Center(
-                        child: CircularProgressIndicator());
-                  }
-                  final tutor = snap.data!;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Stats card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: AppRadius.lgAll,
-                          boxShadow: AppShadows.sm,
-                        ),
-                        child: Row(children: [
-                          _StatItem(
-                            value: tutor.subjects.length.toString(),
-                            label: 'Subjects',
-                            icon: Icons.menu_book_rounded,
-                          ),
-                          Container(
-                            width: 1, height: 36,
-                            color: AppColors.grey100,
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16),
-                          ),
-                          _StatItem(
-                            value: tutor.availability.length
-                                .toString(),
-                            label: 'Slots',
-                            icon: Icons.access_time_rounded,
-                          ),
-                          Container(
-                            width: 1, height: 36,
-                            color: AppColors.grey100,
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16),
-                          ),
-                          _StatItem(
-                            value:
-                                '\$${tutor.hourlyRate.toStringAsFixed(0)}',
-                            label: 'Per hour',
-                            icon: Icons.attach_money_rounded,
-                          ),
-                        ]),
-                      ),
-                      const SizedBox(height: 24),
-                      AppButton(
-                        label: 'Edit Tutor Profile',
-                        variant: AppButtonVariant.outlined,
-                        icon: Icons.edit_rounded,
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EditTutorProfileScreen(
-                                tutor: tutor),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+            if (isTutor && user != null)
+              _TutorSection(uid: user.uid),
           ],
         ),
       ),
@@ -206,6 +139,158 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
+// ── Tutor section — loads once, doesn't rebuild ───────────────────────────
+class _TutorSection extends StatefulWidget {
+  final String uid;
+  const _TutorSection({required this.uid});
+
+  @override
+  State<_TutorSection> createState() => _TutorSectionState();
+}
+
+class _TutorSectionState extends State<_TutorSection> {
+  TutorModel? _tutor;
+  bool        _loading = true;
+  String?     _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final tutor = await TutorService().getTutorById(widget.uid);
+      if (mounted) setState(() { _tutor = tutor; _loading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null || _tutor == null) {
+      return Column(children: [
+        Text('Could not load tutor profile.',
+            style: AppTextStyles.bodyMedium),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: () {
+            setState(() { _loading = true; _error = null; });
+            _load();
+          },
+          child: const Text('Retry'),
+        ),
+      ]);
+    }
+
+    final tutor = _tutor!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Stats card
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: AppRadius.lgAll,
+            boxShadow: AppShadows.sm,
+          ),
+          child: Row(children: [
+            _StatItem(
+              value: tutor.subjects.length.toString(),
+              label: 'Subjects',
+              icon: Icons.menu_book_rounded,
+            ),
+            Container(width: 1, height: 36,
+                color: AppColors.grey100,
+                margin: const EdgeInsets.symmetric(horizontal: 16)),
+            _StatItem(
+              value: tutor.availability.length.toString(),
+              label: 'Slots',
+              icon: Icons.access_time_rounded,
+            ),
+            Container(width: 1, height: 36,
+                color: AppColors.grey100,
+                margin: const EdgeInsets.symmetric(horizontal: 16)),
+            _StatItem(
+              value: '\$${tutor.hourlyRate.toStringAsFixed(0)}',
+              label: 'Per hour',
+              icon: Icons.attach_money_rounded,
+            ),
+          ]),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Location status
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: tutor.hasLocation
+                ? AppColors.successSurface
+                : AppColors.grey50,
+            borderRadius: AppRadius.lgAll,
+            border: Border.all(
+              color: tutor.hasLocation
+                  ? AppColors.success
+                  : AppColors.grey200,
+            ),
+          ),
+          child: Row(children: [
+            Icon(
+              tutor.hasLocation
+                  ? Icons.location_on_rounded
+                  : Icons.location_off_rounded,
+              color: tutor.hasLocation
+                  ? AppColors.success
+                  : AppColors.grey400,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              tutor.hasLocation
+                  ? 'Your pin is visible on the map'
+                  : 'No location set — not visible on map',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: tutor.hasLocation
+                    ? AppColors.success
+                    : AppColors.grey500,
+              ),
+            ),
+          ]),
+        ),
+
+        const SizedBox(height: 16),
+
+        AppButton(
+          label: 'Edit Tutor Profile',
+          variant: AppButtonVariant.outlined,
+          icon: Icons.edit_rounded,
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    EditTutorProfileScreen(tutor: tutor),
+              ),
+            );
+            // Reload after returning from edit
+            setState(() { _loading = true; _error = null; });
+            _load();
+          },
+        ),
+      ],
+    );
+  }
+}
+
+// ── Profile header with photo upload ─────────────────────────────────────
 class _ProfileHeader extends StatefulWidget {
   final dynamic user;
   final bool isTutor;
@@ -223,21 +308,17 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
     try {
       final storage = StorageService();
       final file    = await storage.pickImage();
-      if (file == null) {
-        setState(() => _uploading = false);
-        return;
-      }
+      if (file == null) { setState(() => _uploading = false); return; }
+
       final auth = context.read<AuthProvider>();
       final url  = await storage.uploadProfilePhoto(
-        uid:  auth.user!.uid,
-        file: file,
-      );
-      final tutor =
-          await TutorService().getTutorById(auth.user!.uid);
+          uid: auth.user!.uid, file: file);
+
+      final tutor = await TutorService().getTutorById(auth.user!.uid);
       if (tutor != null) {
-        await TutorService()
-            .updateTutor(tutor.copyWith(photoUrl: url));
+        await TutorService().updateTutor(tutor.copyWith(photoUrl: url));
       }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Photo updated!',
@@ -286,8 +367,7 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
               child: user?.photoUrl != null
                   ? CachedNetworkImage(
                       imageUrl: user.photoUrl!,
-                      fit: BoxFit.cover,
-                    )
+                      fit: BoxFit.cover)
                   : const Icon(Icons.person_rounded,
                       color: AppColors.primary, size: 40),
             ),
@@ -307,10 +387,8 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                     ? const Padding(
                         padding: EdgeInsets.all(4),
                         child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.white,
-                        ),
-                      )
+                            strokeWidth: 2,
+                            color: AppColors.white))
                     : const Icon(Icons.camera_alt_rounded,
                         color: AppColors.white, size: 13),
               ),
