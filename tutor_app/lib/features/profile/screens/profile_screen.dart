@@ -89,11 +89,13 @@ class ProfileScreen extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Email', style: AppTextStyles.labelSmall),
+                    Text('Email',
+                        style: AppTextStyles.labelSmall),
                     const SizedBox(height: 2),
                     Text(user?.email ?? '',
                         style: AppTextStyles.bodyMedium
-                            .copyWith(color: AppColors.grey900)),
+                            .copyWith(
+                                color: AppColors.grey900)),
                   ],
                 ),
               ]),
@@ -101,7 +103,6 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 32),
 
-            // Tutor-only section
             if (isTutor && user != null)
               _TutorSection(uid: user.uid),
           ],
@@ -139,7 +140,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-// ── Tutor section — loads once, doesn't rebuild ───────────────────────────
+// ── Tutor section ─────────────────────────────────────────────────────────
 class _TutorSection extends StatefulWidget {
   final String uid;
   const _TutorSection({required this.uid});
@@ -151,7 +152,6 @@ class _TutorSection extends StatefulWidget {
 class _TutorSectionState extends State<_TutorSection> {
   TutorModel? _tutor;
   bool        _loading = true;
-  String?     _error;
 
   @override
   void initState() {
@@ -160,11 +160,9 @@ class _TutorSectionState extends State<_TutorSection> {
   }
 
   Future<void> _load() async {
-    try {
-      final tutor = await TutorService().getTutorById(widget.uid);
-      if (mounted) setState(() { _tutor = tutor; _loading = false; });
-    } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    final tutor = await TutorService().getTutorById(widget.uid);
+    if (mounted) {
+      setState(() { _tutor = tutor; _loading = false; });
     }
   }
 
@@ -173,27 +171,16 @@ class _TutorSectionState extends State<_TutorSection> {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
-
-    if (_error != null || _tutor == null) {
-      return Column(children: [
-        Text('Could not load tutor profile.',
-            style: AppTextStyles.bodyMedium),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: () {
-            setState(() { _loading = true; _error = null; });
-            _load();
-          },
-          child: const Text('Retry'),
-        ),
-      ]);
+    if (_tutor == null) {
+      return Text('Could not load tutor profile.',
+          style: AppTextStyles.bodyMedium);
     }
 
     final tutor = _tutor!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Stats card
+        // Stats
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -209,7 +196,8 @@ class _TutorSectionState extends State<_TutorSection> {
             ),
             Container(width: 1, height: 36,
                 color: AppColors.grey100,
-                margin: const EdgeInsets.symmetric(horizontal: 16)),
+                margin: const EdgeInsets.symmetric(
+                    horizontal: 16)),
             _StatItem(
               value: tutor.availability.length.toString(),
               label: 'Slots',
@@ -217,9 +205,11 @@ class _TutorSectionState extends State<_TutorSection> {
             ),
             Container(width: 1, height: 36,
                 color: AppColors.grey100,
-                margin: const EdgeInsets.symmetric(horizontal: 16)),
+                margin: const EdgeInsets.symmetric(
+                    horizontal: 16)),
             _StatItem(
-              value: '\$${tutor.hourlyRate.toStringAsFixed(0)}',
+              value:
+                  '\$${tutor.hourlyRate.toStringAsFixed(0)}',
               label: 'Per hour',
               icon: Icons.attach_money_rounded,
             ),
@@ -253,14 +243,16 @@ class _TutorSectionState extends State<_TutorSection> {
               size: 18,
             ),
             const SizedBox(width: 8),
-            Text(
-              tutor.hasLocation
-                  ? 'Your pin is visible on the map'
-                  : 'No location set — not visible on map',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: tutor.hasLocation
-                    ? AppColors.success
-                    : AppColors.grey500,
+            Expanded(
+              child: Text(
+                tutor.hasLocation
+                    ? 'Your pin is visible on the map'
+                    : 'No location set — not visible on map',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: tutor.hasLocation
+                      ? AppColors.success
+                      : AppColors.grey500,
+                ),
               ),
             ),
           ]),
@@ -280,8 +272,7 @@ class _TutorSectionState extends State<_TutorSection> {
                     EditTutorProfileScreen(tutor: tutor),
               ),
             );
-            // Reload after returning from edit
-            setState(() { _loading = true; _error = null; });
+            setState(() => _loading = true);
             _load();
           },
         ),
@@ -290,38 +281,69 @@ class _TutorSectionState extends State<_TutorSection> {
   }
 }
 
-// ── Profile header with photo upload ─────────────────────────────────────
+// ── Profile header with Cloudinary photo upload ───────────────────────────
 class _ProfileHeader extends StatefulWidget {
   final dynamic user;
   final bool isTutor;
-  const _ProfileHeader({required this.user, required this.isTutor});
+  const _ProfileHeader(
+      {required this.user, required this.isTutor});
 
   @override
   State<_ProfileHeader> createState() => _ProfileHeaderState();
 }
 
 class _ProfileHeaderState extends State<_ProfileHeader> {
-  bool _uploading = false;
+  bool    _uploading = false;
+  String? _photoUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load current photo URL from tutor doc
+    _loadPhoto();
+  }
+
+  Future<void> _loadPhoto() async {
+    final auth = context.read<AuthProvider>();
+    if (auth.user == null || !auth.user!.isTutor) return;
+    final tutor =
+        await TutorService().getTutorById(auth.user!.uid);
+    if (mounted && tutor?.photoUrl != null) {
+      setState(() => _photoUrl = tutor!.photoUrl);
+    }
+  }
 
   Future<void> _uploadPhoto() async {
     setState(() => _uploading = true);
     try {
       final storage = StorageService();
       final file    = await storage.pickImage();
-      if (file == null) { setState(() => _uploading = false); return; }
+      if (file == null) {
+        setState(() => _uploading = false);
+        return;
+      }
 
       final auth = context.read<AuthProvider>();
-      final url  = await storage.uploadProfilePhoto(
-          uid: auth.user!.uid, file: file);
 
-      final tutor = await TutorService().getTutorById(auth.user!.uid);
+      // Upload to Cloudinary — get public URL
+      final url = await storage.uploadProfilePhoto(
+        uid:  auth.user!.uid,
+        file: file,
+      );
+
+      // Save URL to Firestore so everyone sees it
+      final tutor =
+          await TutorService().getTutorById(auth.user!.uid);
       if (tutor != null) {
-        await TutorService().updateTutor(tutor.copyWith(photoUrl: url));
+        await TutorService()
+            .updateTutor(tutor.copyWith(photoUrl: url));
       }
+
+      setState(() => _photoUrl = url);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Photo updated!',
+          content: Text('Photo updated! Everyone can see it.',
               style: AppTextStyles.bodyMedium
                   .copyWith(color: AppColors.white)),
           backgroundColor: AppColors.success,
@@ -332,6 +354,7 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
         ));
       }
     } catch (e) {
+      print('Upload error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Upload failed: $e',
@@ -356,6 +379,7 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
       GestureDetector(
         onTap: widget.isTutor ? _uploadPhoto : null,
         child: Stack(children: [
+          // Avatar
           Container(
             width: 80, height: 80,
             decoration: BoxDecoration(
@@ -364,14 +388,24 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
             ),
             child: ClipRRect(
               borderRadius: AppRadius.xxlAll,
-              child: user?.photoUrl != null
+              child: _photoUrl != null
                   ? CachedNetworkImage(
-                      imageUrl: user.photoUrl!,
-                      fit: BoxFit.cover)
+                      imageUrl: _photoUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => const Icon(
+                          Icons.person_rounded,
+                          color: AppColors.primary,
+                          size: 40),
+                      errorWidget: (_, __, ___) => const Icon(
+                          Icons.person_rounded,
+                          color: AppColors.primary,
+                          size: 40),
+                    )
                   : const Icon(Icons.person_rounded,
                       color: AppColors.primary, size: 40),
             ),
           ),
+          // Camera icon badge
           if (widget.isTutor)
             Positioned(
               bottom: 0, right: 0,
@@ -409,6 +443,12 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                 style: AppTextStyles.bodySmall,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
+            if (widget.isTutor) ...[
+              const SizedBox(height: 4),
+              Text('Tap photo to update',
+                  style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primary)),
+            ],
           ],
         ),
       ),
@@ -417,8 +457,8 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
 }
 
 class _StatItem extends StatelessWidget {
-  final String value;
-  final String label;
+  final String   value;
+  final String   label;
   final IconData icon;
   const _StatItem({
     required this.value,
