@@ -4,9 +4,16 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../models/tutor_model.dart';
+import '../../../models/review_model.dart';
+import '../../../services/review_service.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/bookings/screens/book_session_sheet.dart';
 import '../../../features/bookings/providers/booking_provider.dart';
+import '../../../features/reviews/screens/add_review_sheet.dart';
+import '../../../features/reviews/widgets/star_rating.dart';
+import '../../../features/reviews/widgets/review_card.dart';
+
+
 
 //The full tutor profile, photo, bio, subjects, availability slots, and the Book button that opens the booking sheet.
 
@@ -16,14 +23,14 @@ class TutorDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final auth      = context.watch<AuthProvider>();
     final isStudent = auth.user?.isStudent ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // app bar
+          //App bar 
           SliverAppBar(
             expandedHeight: 260,
             pinned: true,
@@ -36,7 +43,8 @@ class TutorDetailScreen extends StatelessWidget {
                   color: AppColors.white.withOpacity(0.2),
                   borderRadius: AppRadius.mdAll,
                 ),
-                child: const Icon(Icons.arrow_back_ios_new_rounded,
+                child: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
                     color: AppColors.white, size: 18),
               ),
             ),
@@ -45,7 +53,6 @@ class TutorDetailScreen extends StatelessWidget {
             ),
           ),
 
-          // Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -53,66 +60,79 @@ class TutorDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Name + university
-                  Text(tutor.name, style: AppTextStyles.headlineLarge),
+                  Text(tutor.name,
+                      style: AppTextStyles.headlineLarge),
                   if (tutor.university != null) ...[
                     const SizedBox(height: 4),
                     Row(children: [
                       const Icon(Icons.school_rounded,
-                          size: 14, color: AppColors.grey400),
+                          size: 14,
+                          color: AppColors.grey400),
                       const SizedBox(width: 6),
                       Text(
-                          '${tutor.university}${tutor.year != null ? ' · ${tutor.year}' : ''}',
-                          style: AppTextStyles.bodyMedium),
+                        '${tutor.university}${tutor.year != null ? ' · ${tutor.year}' : ''}',
+                        style: AppTextStyles.bodyMedium,
+                      ),
                     ]),
                   ],
 
                   const SizedBox(height: 16),
-
-                  // Stats row
                   _StatsRow(tutor: tutor),
-
                   const SizedBox(height: 24),
 
                   // Bio
-                  Text('About', style: AppTextStyles.titleMedium),
+                  Text('About',
+                      style: AppTextStyles.titleMedium),
                   const SizedBox(height: 8),
                   Text(
-                    tutor.bio.isEmpty ? 'No bio provided yet.' : tutor.bio,
+                    tutor.bio.isEmpty
+                        ? 'No bio provided yet.'
+                        : tutor.bio,
                     style: AppTextStyles.bodyLarge,
                   ),
 
                   const SizedBox(height: 24),
 
                   // Subjects
-                  Text('Subjects', style: AppTextStyles.titleMedium),
+                  Text('Subjects',
+                      style: AppTextStyles.titleMedium),
                   const SizedBox(height: 10),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                        tutor.subjects.map((s) => _SubjectTag(s)).toList(),
+                    spacing: 8, runSpacing: 8,
+                    children: tutor.subjects
+                        .map((s) => _SubjectTag(s))
+                        .toList(),
                   ),
 
                   const SizedBox(height: 24),
 
                   // Availability
-                  Text('Available slots', style: AppTextStyles.titleMedium),
+                  Text('Available slots',
+                      style: AppTextStyles.titleMedium),
                   const SizedBox(height: 10),
                   tutor.availability.isEmpty
                       ? Text('No slots listed yet.',
                           style: AppTextStyles.bodyMedium)
                       : Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
+                          spacing: 8, runSpacing: 8,
                           children: tutor.availability
-                              .map((slot) => _SlotChip(slot))
+                              .map((s) => _SlotChip(s))
                               .toList(),
                         ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 24),
 
-                  // Book button — only shown to students
-                  if (isStudent)
+                  //  Reviews section 
+                  _ReviewsSection(
+                    tutor:     tutor,
+                    isStudent: isStudent,
+                    currentUserId: auth.user?.uid,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Book button — students only
+                  if (isStudent) ...[
                     ChangeNotifierProvider(
                       create: (_) => BookingProvider(),
                       child: AppButton(
@@ -122,10 +142,26 @@ class TutorDetailScreen extends StatelessWidget {
                           context: context,
                           isScrollControlled: true,
                           backgroundColor: Colors.transparent,
-                          builder: (_) => BookSessionSheet(tutor: tutor),
+                          builder: (_) =>
+                              BookSessionSheet(tutor: tutor),
                         ),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    // Review button
+                    AppButton(
+                      label: 'Leave a Review',
+                      variant: AppButtonVariant.outlined,
+                      icon: Icons.star_rounded,
+                      onPressed: () => showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) =>
+                            AddReviewSheet(tutor: tutor),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 32),
                 ],
@@ -149,17 +185,19 @@ class TutorDetailScreen extends StatelessWidget {
                   Container(color: AppColors.primarySurface),
             )
           : Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.primary, AppColors.primaryLight],
+                  colors: [
+                    AppColors.primary,
+                    AppColors.primaryLight,
+                  ],
                 ),
               ),
               child: const Icon(Icons.person_rounded,
                   color: Colors.white54, size: 80),
             ),
-      // Gradient overlay so back button is visible
       Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -176,6 +214,89 @@ class TutorDetailScreen extends StatelessWidget {
   }
 }
 
+//  Reviews section
+class _ReviewsSection extends StatelessWidget {
+  final TutorModel tutor;
+  final bool       isStudent;
+  final String?    currentUserId;
+
+  const _ReviewsSection({
+    required this.tutor,
+    required this.isStudent,
+    required this.currentUserId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Reviews',
+                style: AppTextStyles.titleMedium),
+            StarDisplay(
+              rating:      tutor.rating,
+              reviewCount: tutor.reviewCount,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        StreamBuilder<List<ReviewModel>>(
+          stream: ReviewService().getReviews(tutor.uid),
+          builder: (context, snap) {
+            if (snap.connectionState ==
+                ConnectionState.waiting) {
+              return const Center(
+                  child: CircularProgressIndicator());
+            }
+
+            final reviews = snap.data ?? [];
+
+            if (reviews.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.grey50,
+                  borderRadius: AppRadius.lgAll,
+                  border: Border.all(
+                      color: AppColors.grey200),
+                ),
+                child: Center(
+                  child: Text(
+                    'No reviews yet — be the first!',
+                    style: AppTextStyles.bodyMedium,
+                  ),
+                ),
+              );
+            }
+
+            return ListView.builder(
+              shrinkWrap: true,
+              physics:
+                  const NeverScrollableScrollPhysics(),
+              itemCount: reviews.length,
+              itemBuilder: (_, i) => ReviewCard(
+                review:    reviews[i],
+                canDelete: reviews[i].studentId ==
+                    currentUserId,
+                onDelete: () =>
+                    ReviewService().deleteReview(
+                  tutorId:  tutor.uid,
+                  reviewId: reviews[i].id,
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+//  Supporting widgets 
 class _StatsRow extends StatelessWidget {
   final TutorModel tutor;
   const _StatsRow({required this.tutor});
@@ -215,17 +336,17 @@ class _StatsRow extends StatelessWidget {
   }
 
   Widget _divider() => Container(
-      width: 1,
-      height: 36,
+      width: 1, height: 36,
       color: AppColors.grey100,
-      margin: const EdgeInsets.symmetric(horizontal: 16));
+      margin:
+          const EdgeInsets.symmetric(horizontal: 16));
 }
 
 class _Stat extends StatelessWidget {
   final IconData icon;
-  final Color iconColor;
-  final String value;
-  final String label;
+  final Color    iconColor;
+  final String   value;
+  final String   label;
   const _Stat({
     required this.icon,
     required this.iconColor,
@@ -235,13 +356,13 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Expanded(
-        child: Column(children: [
-          Icon(icon, color: iconColor, size: 20),
-          const SizedBox(height: 4),
-          Text(value, style: AppTextStyles.titleMedium),
-          Text(label, style: AppTextStyles.bodySmall),
-        ]),
-      );
+    child: Column(children: [
+      Icon(icon, color: iconColor, size: 20),
+      const SizedBox(height: 4),
+      Text(value, style: AppTextStyles.titleMedium),
+      Text(label, style: AppTextStyles.bodySmall),
+    ]),
+  );
 }
 
 class _SubjectTag extends StatelessWidget {
@@ -250,14 +371,16 @@ class _SubjectTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: AppColors.primarySurface,
-          borderRadius: AppRadius.fullAll,
-        ),
-        child: Text(label,
-            style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary)),
-      );
+    padding: const EdgeInsets.symmetric(
+        horizontal: 14, vertical: 7),
+    decoration: BoxDecoration(
+      color: AppColors.primarySurface,
+      borderRadius: AppRadius.fullAll,
+    ),
+    child: Text(label,
+        style: AppTextStyles.labelLarge
+            .copyWith(color: AppColors.primary)),
+  );
 }
 
 class _SlotChip extends StatelessWidget {
@@ -266,17 +389,18 @@ class _SlotChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: AppRadius.mdAll,
-          border: Border.all(color: AppColors.grey200),
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.access_time_rounded,
-              size: 13, color: AppColors.grey400),
-          const SizedBox(width: 5),
-          Text(label, style: AppTextStyles.bodyMedium),
-        ]),
-      );
+    padding: const EdgeInsets.symmetric(
+        horizontal: 14, vertical: 7),
+    decoration: BoxDecoration(
+      color: AppColors.white,
+      borderRadius: AppRadius.mdAll,
+      border: Border.all(color: AppColors.grey200),
+    ),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      const Icon(Icons.access_time_rounded,
+          size: 13, color: AppColors.grey400),
+      const SizedBox(width: 5),
+      Text(label, style: AppTextStyles.bodyMedium),
+    ]),
+  );
 }
