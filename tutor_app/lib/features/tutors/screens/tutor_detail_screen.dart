@@ -6,12 +6,14 @@ import '../../../core/widgets/app_button.dart';
 import '../../../models/tutor_model.dart';
 import '../../../models/review_model.dart';
 import '../../../services/review_service.dart';
+import '../../../services/chat_service.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/bookings/screens/book_session_sheet.dart';
 import '../../../features/bookings/providers/booking_provider.dart';
 import '../../../features/reviews/screens/add_review_sheet.dart';
 import '../../../features/reviews/widgets/star_rating.dart';
 import '../../../features/reviews/widgets/review_card.dart';
+import '../../../features/chat/screens/chat_screen.dart';
 
 
 
@@ -40,7 +42,7 @@ class TutorDetailScreen extends StatelessWidget {
               child: Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.2),
+                  color: AppColors.white.withValues(alpha: 0.2),
                   borderRadius: AppRadius.mdAll,
                 ),
                 child: const Icon(
@@ -131,7 +133,7 @@ class TutorDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  // Book button — students only
+                  // Action buttons — students only
                   if (isStudent) ...[
                     ChangeNotifierProvider(
                       create: (_) => BookingProvider(),
@@ -148,7 +150,8 @@ class TutorDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // Review button
+                    _MessageButton(tutor: tutor),
+                    const SizedBox(height: 12),
                     AppButton(
                       label: 'Leave a Review',
                       variant: AppButtonVariant.outlined,
@@ -204,7 +207,7 @@ class TutorDetailScreen extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.black.withOpacity(0.3),
+              Colors.black.withValues(alpha: 0.3),
               Colors.transparent,
             ],
           ),
@@ -403,4 +406,77 @@ class _SlotChip extends StatelessWidget {
       Text(label, style: AppTextStyles.bodyMedium),
     ]),
   );
+}
+
+// ── Message button — opens or creates a chat with this tutor ──────────────────
+
+class _MessageButton extends StatefulWidget {
+  final TutorModel tutor;
+  const _MessageButton({required this.tutor});
+
+  @override
+  State<_MessageButton> createState() => _MessageButtonState();
+}
+
+class _MessageButtonState extends State<_MessageButton> {
+  bool _loading = false;
+
+  Future<void> _openChat() async {
+    final auth = context.read<AuthProvider>();
+    final me   = auth.user;
+    if (me == null) return;
+
+    setState(() => _loading = true);
+    try {
+      final chatId = await ChatService().getOrCreateChat(
+        uid1:   me.uid,
+        name1:  me.name,
+        uid2:   widget.tutor.uid,
+        name2:  widget.tutor.name,
+        photo1: me.photoUrl,
+        photo2: widget.tutor.photoUrl,
+      );
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            chatId:         chatId,
+            otherUserId:    widget.tutor.uid,
+            otherUserName:  widget.tutor.name,
+            otherUserPhoto: widget.tutor.photoUrl,
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: _loading ? null : _openChat,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
+        ),
+        icon: _loading
+            ? const SizedBox(
+                width: 16, height: 16,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: AppColors.primary),
+              )
+            : const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+        label: Text(
+          _loading ? 'Opening chat…' : 'Message',
+          style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary),
+        ),
+      ),
+    );
+  }
 }
