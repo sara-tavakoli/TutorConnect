@@ -4,14 +4,15 @@ import '../../auth/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/booking_model.dart';
 import '../../../services/booking_service.dart';
+import '../../../services/chat_service.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
 import '../../tutors/screens/tutor_feed_screen.dart';
+import '../../chat/screens/chat_list_screen.dart';
 import '../../bookings/screens/bookings_screen.dart';
-import '../../map/screens/map_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 
 // Tab indices
-// 0 = Dashboard, 1 = Browse, 2 = Map, 3 = Bookings, 4 = Profile
+// 0 = Dashboard, 1 = Browse, 2 = Chat, 3 = Bookings, 4 = Profile
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Widget> get _pages => [
     DashboardScreen(onNavigate: _navigateTo),
     const TutorFeedScreen(),
-    const MapScreen(),
+    const ChatListScreen(),
     const BookingsScreen(),
     const ProfileScreen(),
   ];
@@ -73,13 +74,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   selected:   _currentIndex == 1,
                   onTap: () => setState(() => _currentIndex = 1),
                 ),
-                _NavItem(
-                  icon:       Icons.map_outlined,
-                  activeIcon: Icons.map_rounded,
-                  label:      'Map',
-                  selected:   _currentIndex == 2,
-                  onTap: () => setState(() => _currentIndex = 2),
-                ),
+                // Chat tab with live unread badge
+                if (user != null)
+                  StreamBuilder<int>(
+                    stream: ChatService().getTotalUnread(user.uid),
+                    builder: (context, snap) {
+                      final unread = snap.data ?? 0;
+                      return _NavItem(
+                        icon:       Icons.chat_bubble_outline_rounded,
+                        activeIcon: Icons.chat_bubble_rounded,
+                        label:      'Messages',
+                        selected:   _currentIndex == 2,
+                        badge:      unread > 0 ? unread : null,
+                        onTap: () => setState(() => _currentIndex = 2),
+                      );
+                    },
+                  )
+                else
+                  _NavItem(
+                    icon:       Icons.chat_bubble_outline_rounded,
+                    activeIcon: Icons.chat_bubble_rounded,
+                    label:      'Messages',
+                    selected:   _currentIndex == 2,
+                    onTap: () => setState(() => _currentIndex = 2),
+                  ),
                 // Bookings tab with live pending badge
                 if (user != null)
                   StreamBuilder<List<BookingModel>>(
