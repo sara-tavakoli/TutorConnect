@@ -108,12 +108,17 @@ class AuthProvider extends ChangeNotifier {
   }
 
   String _friendlyError(String raw) {
-    if (raw.contains('email-already-in-use')) return 'This email is already registered.';
-    if (raw.contains('user-not-found'))       return 'No account found with this email.';
-    if (raw.contains('wrong-password'))       return 'Incorrect password. Please try again.';
-    if (raw.contains('weak-password'))        return 'Password must be at least 6 characters.';
-    if (raw.contains('invalid-email'))        return 'Please enter a valid email address.';
-    if (raw.contains('network-request-failed')) return 'Network error. Check your connection.';
+    if (raw.contains('email-already-in-use'))    return 'This email is already registered.';
+    if (raw.contains('user-not-found'))           return 'No account found with this email.';
+    if (raw.contains('wrong-password'))           return 'Incorrect password. Please try again.';
+    // newer Firebase SDK combines user-not-found + wrong-password into one code
+    if (raw.contains('invalid-credential'))       return 'Incorrect email or password.';
+    if (raw.contains('invalid-login-credentials'))return 'Incorrect email or password.';
+    if (raw.contains('weak-password'))            return 'Password must be at least 6 characters.';
+    if (raw.contains('invalid-email'))            return 'Please enter a valid email address.';
+    if (raw.contains('network-request-failed'))   return 'Network error. Check your connection.';
+    if (raw.contains('too-many-requests'))        return 'Too many attempts. Please wait and try again.';
+    if (raw.contains('user-disabled'))            return 'This account has been disabled.';
     return 'Something went wrong. Please try again.';
   }
 }
