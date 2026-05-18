@@ -29,112 +29,258 @@ class _TutorFeedView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // App bar
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            backgroundColor: AppColors.white,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            expandedHeight: 120,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding:
-                  const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              title: Text('Find a Tutor',
-                  style: AppTextStyles.headlineMedium),
-              expandedTitleScale: 1.2,
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(56),
-              child: Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                child: _SearchBar(),
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: () async {
+          // Provider is already streaming; a brief delay gives visual feedback
+          await Future.delayed(const Duration(milliseconds: 600));
+        },
+        child: CustomScrollView(
+          slivers: [
+            // App bar
+            SliverAppBar(
+              floating: true,
+              snap: true,
+              backgroundColor: AppColors.white,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              expandedHeight: 120,
+              flexibleSpace: FlexibleSpaceBar(
+                titlePadding:
+                    const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                title: Text('Find a Tutor',
+                    style: AppTextStyles.headlineMedium),
+                expandedTitleScale: 1.2,
               ),
-            ),
-          ),
-
-          // Subject filter chips
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: provider.isLoading
-                  ? const SizedBox(height: 36)
-                  : SubjectFilterChips(
-                      subjects:   provider.allSubjects,
-                      selected:   provider.selectedSubject,
-                      onSelected: provider.setSubjectFilter,
-                    ),
-            ),
-          ),
-
-          // Results count 
-          if (!provider.isLoading)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                child: Text(
-                  '${provider.filteredTutors.length} tutor${provider.filteredTutors.length == 1 ? '' : 's'} available',
-                  style: AppTextStyles.bodySmall,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(56),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: _SearchBar(),
                 ),
               ),
             ),
 
-          // Loading skeletons 
-          if (provider.isLoading)
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (_, __) => const SkeletonCard(),
-                childCount: 4,
-              ),
-            )
-
-          // ── Empty state ───────────────────────────────────────
-          else if (provider.filteredTutors.isEmpty)
-            SliverFillRemaining(
-              child: EmptyState(
-                icon:    Icons.search_off_rounded,
-                title:   'No tutors found',
-                message: 'Try a different subject or search term.',
-                buttonLabel: provider.selectedSubject != 'All'
-                    ? 'Clear filter'
-                    : null,
-                onButtonTap: provider.clearFilters,
-              ),
-            )
-
-          // Tutor list 
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final tutor = provider.filteredTutors[index];
-                  return TutorCard(
-                    tutor: tutor,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            TutorDetailScreen(tutor: tutor),
+            // Subject filter chips
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 4),
+                child: provider.isLoading
+                    ? const SizedBox(height: 36)
+                    : SubjectFilterChips(
+                        subjects:   provider.allSubjects,
+                        selected:   provider.selectedSubject,
+                        onSelected: provider.setSubjectFilter,
                       ),
-                    ),
-                  );
-                },
-                childCount: provider.filteredTutors.length,
               ),
             ),
 
-          const SliverToBoxAdapter(
-              child: SizedBox(height: 24)),
-        ],
+            // Sort + results row
+            if (!provider.isLoading)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                  child: Row(
+                    children: [
+                      Text(
+                        '${provider.filteredTutors.length} tutor${provider.filteredTutors.length == 1 ? '' : 's'}',
+                        style: AppTextStyles.bodySmall,
+                      ),
+                      const Spacer(),
+                      _SortButton(
+                        current:  provider.sort,
+                        onSelect: provider.setSort,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // Loading skeletons
+            if (provider.isLoading)
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (_, __) => const SkeletonCard(),
+                  childCount: 4,
+                ),
+              )
+
+            // Empty state
+            else if (provider.filteredTutors.isEmpty)
+              SliverFillRemaining(
+                child: EmptyState(
+                  icon:    Icons.search_off_rounded,
+                  title:   'No tutors found',
+                  message: 'Try a different subject or search term.',
+                  buttonLabel: provider.selectedSubject != 'All'
+                      ? 'Clear filter'
+                      : null,
+                  onButtonTap: provider.clearFilters,
+                ),
+              )
+
+            // Tutor list
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final tutor = provider.filteredTutors[index];
+                    return TutorCard(
+                      tutor: tutor,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              TutorDetailScreen(tutor: tutor),
+                        ),
+                      ),
+                    );
+                  },
+                  childCount: provider.filteredTutors.length,
+                ),
+              ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          ],
+        ),
       ),
     );
   }
 }
 
+// ── Sort button ───────────────────────────────────────────────────────────────
+class _SortButton extends StatelessWidget {
+  final TutorSort current;
+  final ValueChanged<TutorSort> onSelect;
+
+  const _SortButton({required this.current, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = current != TutorSort.recommended;
+    return GestureDetector(
+      onTap: () => _showMenu(context),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : AppColors.white,
+          borderRadius: AppRadius.fullAll,
+          border: Border.all(
+            color: isActive ? AppColors.primary : AppColors.grey200,
+          ),
+          boxShadow: isActive ? AppShadows.primary : AppShadows.sm,
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.sort_rounded, size: 14,
+              color: isActive ? AppColors.white : AppColors.grey600),
+          const SizedBox(width: 5),
+          Text(current.label,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: isActive ? AppColors.white : AppColors.grey600,
+                letterSpacing: 0,
+              )),
+        ]),
+      ),
+    );
+  }
+
+  void _showMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _SortSheet(current: current, onSelect: onSelect),
+    );
+  }
+}
+
+class _SortSheet extends StatelessWidget {
+  final TutorSort current;
+  final ValueChanged<TutorSort> onSelect;
+
+  const _SortSheet({required this.current, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.grey200,
+                borderRadius: AppRadius.fullAll,
+              )),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Sort tutors by',
+                  style: AppTextStyles.titleMedium),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...TutorSort.values.map((sort) {
+            final selected = sort == current;
+            return ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+              leading: Container(
+                width: 36, height: 36,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? AppColors.primarySurface
+                      : AppColors.grey50,
+                  borderRadius: AppRadius.mdAll,
+                ),
+                child: Icon(_sortIcon(sort), size: 18,
+                    color: selected
+                        ? AppColors.primary
+                        : AppColors.grey400),
+              ),
+              title: Text(sort.label,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: selected
+                        ? AppColors.primary
+                        : AppColors.grey800,
+                    fontWeight: selected
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                  )),
+              trailing: selected
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.primary, size: 20)
+                  : null,
+              onTap: () {
+                onSelect(sort);
+                Navigator.pop(context);
+              },
+            );
+          }),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  IconData _sortIcon(TutorSort sort) {
+    switch (sort) {
+      case TutorSort.recommended: return Icons.auto_awesome_rounded;
+      case TutorSort.ratingDesc:  return Icons.star_rounded;
+      case TutorSort.priceLow:    return Icons.arrow_downward_rounded;
+      case TutorSort.priceHigh:   return Icons.arrow_upward_rounded;
+    }
+  }
+}
+
+// ── Search bar ────────────────────────────────────────────────────────────────
 class _SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
