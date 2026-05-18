@@ -45,32 +45,35 @@ class _TutorFeedView extends StatelessWidget {
               backgroundColor: AppColors.white,
               surfaceTintColor: Colors.transparent,
               elevation: 0,
-              expandedHeight: 120,
+              expandedHeight: 96,
               actions: [
                 Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: IconButton(
-                    tooltip: 'Map view',
-                    icon: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppColors.primarySurface,
-                        borderRadius: AppRadius.mdAll,
-                      ),
-                      child: const Icon(Icons.map_rounded,
-                          color: AppColors.primary, size: 20),
-                    ),
+                  padding: const EdgeInsets.only(right: 12),
+                  child: TextButton.icon(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => const MapScreen()),
+                      MaterialPageRoute(builder: (_) => const MapScreen()),
+                    ),
+                    icon: const Icon(Icons.map_rounded, size: 26),
+                    label: const Text('Map view'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      backgroundColor: AppColors.primarySurface,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: AppRadius.fullAll),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 5),
+                      textStyle: AppTextStyles.labelSmall
+                          .copyWith(letterSpacing: 0),
                     ),
                   ),
                 ),
               ],
               flexibleSpace: FlexibleSpaceBar(
                 titlePadding:
-                    const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                    const EdgeInsets.fromLTRB(24, 0, 24, 8),
                 title: Text('Find a Tutor',
                     style: AppTextStyles.headlineMedium),
                 expandedTitleScale: 1.2,
@@ -116,6 +119,48 @@ class _TutorFeedView extends StatelessWidget {
                         onSelect: provider.setSort,
                       ),
                     ],
+                  ),
+                ),
+              ),
+
+            // Map discovery banner
+            if (!provider.isLoading)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const MapScreen()),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primarySurface,
+                        borderRadius: AppRadius.lgAll,
+                        border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.25)),
+                      ),
+                      child: Row(children: [
+                        const Icon(Icons.location_on_rounded,
+                            color: AppColors.primary, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Explore tutors near you on the map',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios_rounded,
+                            color: AppColors.primary, size: 14),
+                      ]),
+                    ),
                   ),
                 ),
               ),
