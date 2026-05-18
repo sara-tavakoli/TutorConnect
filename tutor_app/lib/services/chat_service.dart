@@ -2,8 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/chat_model.dart';
 import '../models/message_model.dart';
 
+/// Manages real-time 1-to-1 chat conversations stored in Firestore.
 class ChatService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  ChatService({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
 
   // Deterministic chat ID — same pair always maps to the same doc
   String _chatId(String uid1, String uid2) {
