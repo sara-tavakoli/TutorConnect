@@ -56,7 +56,17 @@ class _RegisterScreenState extends State<RegisterScreen>
       name: _name.text, email: _email.text,
       password: _password.text, role: _selectedRole,
     );
-    if (!success && mounted) {
+    if (!mounted) return;
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Welcome! Your account has been created.',
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.white)),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
+        margin: const EdgeInsets.all(16),
+      ));
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(auth.errorMessage ?? 'Registration failed.',
             style: AppTextStyles.bodyMedium.copyWith(color: AppColors.white)),
