@@ -109,10 +109,15 @@ class TutorCard extends StatelessWidget {
         Row(children: [
           const Icon(Icons.star_rounded, size: 14, color: AppColors.accent),
           const SizedBox(width: 3),
-          Text(tutor.rating.toStringAsFixed(1),
-              style: AppTextStyles.labelLarge.copyWith(fontSize: 12)),
+          Text(
+            tutor.reviewCount == 0 ? '—' : tutor.rating.toStringAsFixed(1),
+            style: AppTextStyles.labelLarge.copyWith(fontSize: 12),
+          ),
           const SizedBox(width: 3),
-          Text('(${tutor.reviewCount})', style: AppTextStyles.bodySmall),
+          Text(
+            tutor.reviewCount == 0 ? 'No reviews' : '(${tutor.reviewCount})',
+            style: AppTextStyles.bodySmall,
+          ),
         ]),
         const SizedBox(height: 8),
         Wrap(
