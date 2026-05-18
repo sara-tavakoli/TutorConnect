@@ -9,9 +9,15 @@ class BookingService {
   BookingService({FirebaseFirestore? db})
       : _db = db ?? FirebaseFirestore.instance;
 
-  /// Writes a new booking document to Firestore.
+  /// Writes a new booking document and immediately blocks the slot to prevent double-booking.
   Future<void> createBooking(BookingModel booking) async {
-    await _db.collection('bookings').add(booking.toMap());
+    final batch = _db.batch();
+    batch.set(_db.collection('bookings').doc(), booking.toMap());
+    batch.update(
+      _db.collection('tutors').doc(booking.tutorId),
+      {'bookedSlots': FieldValue.arrayUnion([booking.slot])},
+    );
+    await batch.commit();
   }
 
   /// Real-time stream of all bookings where [studentId] is the student.
