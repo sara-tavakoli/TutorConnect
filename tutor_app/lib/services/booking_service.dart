@@ -41,6 +41,36 @@ class BookingService {
         .update({'status': status.name});
   }
 
+  // Confirm a booking and mark the slot as taken (keeps slot visible, blocks re-booking)
+  Future<void> confirmBooking(
+      String bookingId, String tutorId, String slot) async {
+    final batch = _db.batch();
+    batch.update(
+      _db.collection('bookings').doc(bookingId),
+      {'status': BookingStatus.confirmed.name},
+    );
+    batch.update(
+      _db.collection('tutors').doc(tutorId),
+      {'bookedSlots': FieldValue.arrayUnion([slot])},
+    );
+    await batch.commit();
+  }
+
+  // Release a slot back to available when a booking is cancelled or completed
+  Future<void> releaseSlot(
+      String bookingId, String tutorId, String slot, BookingStatus newStatus) async {
+    final batch = _db.batch();
+    batch.update(
+      _db.collection('bookings').doc(bookingId),
+      {'status': newStatus.name},
+    );
+    batch.update(
+      _db.collection('tutors').doc(tutorId),
+      {'bookedSlots': FieldValue.arrayRemove([slot])},
+    );
+    await batch.commit();
+  }
+
   // Delete a booking
   Future<void> deleteBooking(String bookingId) async {
     await _db.collection('bookings').doc(bookingId).delete();

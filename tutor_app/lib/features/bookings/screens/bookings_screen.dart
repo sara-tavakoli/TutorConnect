@@ -148,21 +148,21 @@ class _BookingList extends StatelessWidget {
           booking: b,
           isTutor: isTutor,
           onConfirm: isTutor && b.isPending
-              ? () => provider.updateStatus(b.id, BookingStatus.confirmed)
+              ? () => provider.confirmBooking(b.id, b.tutorId, b.slot)
               : null,
           onComplete: isTutor && b.isConfirmed
-              ? () => _confirmComplete(context, b.id, provider)
+              ? () => _confirmComplete(context, b.id, b.tutorId, b.slot, provider)
               : null,
           onCancel: b.isPending || b.isConfirmed
-              ? () => _confirmCancel(context, b.id, provider)
+              ? () => _confirmCancel(context, b.id, b.tutorId, b.slot, b.isConfirmed, provider)
               : null,
         );
       },
     );
   }
 
-  void _confirmComplete(
-      BuildContext context, String bookingId, BookingProvider provider) {
+  void _confirmComplete(BuildContext context, String bookingId, String tutorId,
+      String slot, BookingProvider provider) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -179,7 +179,7 @@ class _BookingList extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              provider.updateStatus(bookingId, BookingStatus.completed);
+              provider.releaseSlot(bookingId, tutorId, slot, BookingStatus.completed);
               Navigator.pop(context);
             },
             child: const Text('Mark done',
@@ -190,8 +190,8 @@ class _BookingList extends StatelessWidget {
     );
   }
 
-  void _confirmCancel(
-      BuildContext context, String bookingId, BookingProvider provider) {
+  void _confirmCancel(BuildContext context, String bookingId, String tutorId,
+      String slot, bool wasConfirmed, BookingProvider provider) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -206,7 +206,11 @@ class _BookingList extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              provider.updateStatus(bookingId, BookingStatus.cancelled);
+              if (wasConfirmed) {
+                provider.releaseSlot(bookingId, tutorId, slot, BookingStatus.cancelled);
+              } else {
+                provider.updateStatus(bookingId, BookingStatus.cancelled);
+              }
               Navigator.pop(context);
             },
             child: const Text('Cancel session',

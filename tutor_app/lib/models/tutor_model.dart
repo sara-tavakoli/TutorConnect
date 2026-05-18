@@ -14,6 +14,7 @@ class TutorModel {
   final String? year;
   final double? latitude;
   final double? longitude;
+  final List<String> bookedSlots;
 
   const TutorModel({
     required this.uid,
@@ -29,6 +30,7 @@ class TutorModel {
     this.year,
     this.latitude,
     this.longitude,
+    this.bookedSlots = const [],
   });
   
 //Add latitude and longitude fields so tutors can save their campus location.
@@ -50,6 +52,7 @@ class TutorModel {
       year:         map['year']         as String?,
       latitude:     (map['latitude']    as num?)?.toDouble(),
       longitude:    (map['longitude']   as num?)?.toDouble(),
+      bookedSlots:  List<String>.from(map['bookedSlots'] as List? ?? []),
     );
   }
 
@@ -66,6 +69,7 @@ class TutorModel {
     'year':         year,
     'latitude':     latitude,
     'longitude':    longitude,
+    'bookedSlots':  bookedSlots,
   };
 
   TutorModel copyWith({

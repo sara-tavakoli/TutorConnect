@@ -53,6 +53,16 @@ class BookingProvider extends ChangeNotifier {
     await _service.updateStatus(bookingId, status);
   }
 
+  Future<void> confirmBooking(
+      String bookingId, String tutorId, String slot) async {
+    await _service.confirmBooking(bookingId, tutorId, slot);
+  }
+
+  Future<void> releaseSlot(
+      String bookingId, String tutorId, String slot, BookingStatus newStatus) async {
+    await _service.releaseSlot(bookingId, tutorId, slot, newStatus);
+  }
+
   Future<void> deleteBooking(String bookingId) async {
     await _service.deleteBooking(bookingId);
   }

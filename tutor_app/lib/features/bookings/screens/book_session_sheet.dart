@@ -178,33 +178,56 @@ class _BookSessionSheetState extends State<BookSessionSheet> {
                     spacing: 8, runSpacing: 8,
                     children: widget.tutor.availability.map((slot) {
                       final active = slot == _selectedSlot;
+                      final taken = widget.tutor.bookedSlots.contains(slot);
                       return GestureDetector(
-                        onTap: () =>
-                            setState(() => _selectedSlot = slot),
+                        onTap: taken
+                            ? null
+                            : () => setState(() => _selectedSlot = slot),
                         child: AnimatedContainer(
                           duration:
                               const Duration(milliseconds: 180),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
-                            color: active
-                                ? AppColors.primarySurface
-                                : AppColors.grey50,
+                            color: taken
+                                ? AppColors.grey100
+                                : active
+                                    ? AppColors.primarySurface
+                                    : AppColors.grey50,
                             borderRadius: AppRadius.mdAll,
                             border: Border.all(
-                              color: active
-                                  ? AppColors.primary
-                                  : AppColors.grey200,
-                              width: active ? 1.5 : 1,
+                              color: taken
+                                  ? AppColors.grey200
+                                  : active
+                                      ? AppColors.primary
+                                      : AppColors.grey200,
+                              width: active && !taken ? 1.5 : 1,
                             ),
                           ),
-                          child: Text(slot,
-                              style: AppTextStyles.bodyMedium
-                                  .copyWith(
-                                color: active
-                                    ? AppColors.primary
-                                    : AppColors.grey700,
-                              )),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(slot,
+                                  style: AppTextStyles.bodyMedium
+                                      .copyWith(
+                                    color: taken
+                                        ? AppColors.grey400
+                                        : active
+                                            ? AppColors.primary
+                                            : AppColors.grey700,
+                                    decoration: taken
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                  )),
+                              if (taken) ...[
+                                const SizedBox(width: 4),
+                                Text('Booked',
+                                    style: AppTextStyles.bodySmall
+                                        .copyWith(
+                                            color: AppColors.grey400)),
+                              ],
+                            ],
+                          ),
                         ),
                       );
                     }).toList(),
