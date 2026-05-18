@@ -354,7 +354,6 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
         ));
       }
     } catch (e) {
-      print('Upload error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Upload failed: $e',
