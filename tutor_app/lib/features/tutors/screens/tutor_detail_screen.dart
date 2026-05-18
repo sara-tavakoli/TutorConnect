@@ -7,6 +7,7 @@ import '../../../models/tutor_model.dart';
 import '../../../models/review_model.dart';
 import '../../../services/review_service.dart';
 import '../../../services/chat_service.dart';
+import '../../../services/booking_service.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/bookings/screens/book_session_sheet.dart';
 import '../../../features/bookings/providers/booking_provider.dart';
@@ -134,7 +135,7 @@ class TutorDetailScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Action buttons — students only
-                  if (isStudent) ...[
+                  if (isStudent && auth.user != null) ...[
                     ChangeNotifierProvider(
                       create: (_) => BookingProvider(),
                       child: AppButton(
@@ -152,17 +153,11 @@ class TutorDetailScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     _MessageButton(tutor: tutor),
                     const SizedBox(height: 12),
-                    AppButton(
-                      label: 'Leave a Review',
-                      variant: AppButtonVariant.outlined,
-                      icon: Icons.star_rounded,
-                      onPressed: () => showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) =>
-                            AddReviewSheet(tutor: tutor),
-                      ),
+                    // Review button only unlocks after a completed session
+                    _ReviewGate(
+                      tutorId:   tutor.uid,
+                      studentId: auth.user!.uid,
+                      tutor:     tutor,
                     ),
                   ],
 
@@ -477,6 +472,68 @@ class _MessageButtonState extends State<_MessageButton> {
           style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary),
         ),
       ),
+    );
+  }
+}
+
+// ── Review gate — only unlocked after a completed session ─────────────────────
+
+class _ReviewGate extends StatelessWidget {
+  final String     tutorId;
+  final String     studentId;
+  final TutorModel tutor;
+
+  const _ReviewGate({
+    required this.tutorId,
+    required this.studentId,
+    required this.tutor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: BookingService().hasCompletedSession(studentId, tutorId),
+      builder: (context, snap) {
+        final canReview = snap.data ?? false;
+
+        if (canReview) {
+          return AppButton(
+            label:   'Leave a Review',
+            variant: AppButtonVariant.outlined,
+            icon:    Icons.star_rounded,
+            onPressed: () => showModalBottomSheet(
+              context:           context,
+              isScrollControlled: true,
+              backgroundColor:   Colors.transparent,
+              builder: (_) => AddReviewSheet(tutor: tutor),
+            ),
+          );
+        }
+
+        // Locked state — no completed session yet
+        return Container(
+          width:   double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            color:        AppColors.grey50,
+            borderRadius: AppRadius.lgAll,
+            border:       Border.all(color: AppColors.grey200),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_outline_rounded,
+                  size: 15, color: AppColors.grey400),
+              const SizedBox(width: 8),
+              Text(
+                'Complete a session to leave a review',
+                style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.grey400),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
