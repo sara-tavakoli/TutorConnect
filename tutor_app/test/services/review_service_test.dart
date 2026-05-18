@@ -83,6 +83,54 @@ void main() {
     });
   });
 
+  group('ReviewService.deleteReview', () {
+    test('removes the review document', () async {
+      await seedTutor();
+      await service.addReview(makeReview(studentId: 's1', rating: 4.0));
+      final before = await fakeDb
+          .collection('tutors').doc('t1').collection('reviews').get();
+      final reviewId = before.docs.first.id;
+
+      await service.deleteReview(tutorId: 't1', reviewId: reviewId);
+
+      final after = await fakeDb
+          .collection('tutors').doc('t1').collection('reviews').get();
+      expect(after.docs, isEmpty);
+    });
+
+    test('recalculates rating after deletion', () async {
+      await seedTutor();
+      await service.addReview(makeReview(studentId: 's1', rating: 4.0));
+      await service.addReview(makeReview(studentId: 's2', rating: 5.0));
+
+      final reviews = await fakeDb
+          .collection('tutors').doc('t1').collection('reviews').get();
+      final idToDelete = reviews.docs
+          .firstWhere((d) => d.data()['studentId'] == 's1')
+          .id;
+
+      await service.deleteReview(tutorId: 't1', reviewId: idToDelete);
+
+      final tutor = await fakeDb.collection('tutors').doc('t1').get();
+      expect(tutor.data()!['rating'], 5.0);
+      expect(tutor.data()!['reviewCount'], 1);
+    });
+
+    test('resets rating to 0 when all reviews deleted', () async {
+      await seedTutor();
+      await service.addReview(makeReview(studentId: 's1', rating: 3.0));
+      final reviews = await fakeDb
+          .collection('tutors').doc('t1').collection('reviews').get();
+      final reviewId = reviews.docs.first.id;
+
+      await service.deleteReview(tutorId: 't1', reviewId: reviewId);
+
+      final tutor = await fakeDb.collection('tutors').doc('t1').get();
+      expect(tutor.data()!['rating'], 0.0);
+      expect(tutor.data()!['reviewCount'], 0);
+    });
+  });
+
   group('ReviewService.hasReviewed', () {
     test('returns true when student already reviewed', () async {
       await seedTutor();
