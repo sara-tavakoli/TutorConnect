@@ -150,15 +150,48 @@ class _BookingList extends StatelessWidget {
           onConfirm: isTutor && b.isPending
               ? () => provider.updateStatus(b.id, BookingStatus.confirmed)
               : null,
+          onComplete: isTutor && b.isConfirmed
+              ? () => _confirmComplete(context, b.id, provider)
+              : null,
           onCancel: b.isPending || b.isConfirmed
-              ? () => _confirmCancel(context, b.id)
+              ? () => _confirmCancel(context, b.id, provider)
               : null,
         );
       },
     );
   }
 
-  void _confirmCancel(BuildContext context, String bookingId) {
+  void _confirmComplete(
+      BuildContext context, String bookingId, BookingProvider provider) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.xlAll),
+        title: Text('Mark as completed?', style: AppTextStyles.titleMedium),
+        content: Text(
+          'This will mark the session as done and let the student leave a review.',
+          style: AppTextStyles.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Not yet'),
+          ),
+          TextButton(
+            onPressed: () {
+              provider.updateStatus(bookingId, BookingStatus.completed);
+              Navigator.pop(context);
+            },
+            child: const Text('Mark done',
+                style: TextStyle(color: AppColors.success)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmCancel(
+      BuildContext context, String bookingId, BookingProvider provider) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -176,7 +209,7 @@ class _BookingList extends StatelessWidget {
               provider.updateStatus(bookingId, BookingStatus.cancelled);
               Navigator.pop(context);
             },
-            child: Text('Cancel session',
+            child: const Text('Cancel session',
                 style: TextStyle(color: AppColors.error)),
           ),
         ],
