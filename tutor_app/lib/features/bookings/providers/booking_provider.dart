@@ -7,7 +7,7 @@ import '../../../services/booking_service.dart';
 
 
 class BookingProvider extends ChangeNotifier {
-  final BookingService _service = BookingService();
+  late final BookingService _service;
 
   List<BookingModel> _bookings  = [];
   bool               _isLoading = true;
@@ -43,6 +43,10 @@ class BookingProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     });
+  }
+
+  BookingProvider({BookingService? service}) {
+    _service = service ?? BookingService();
   }
 
   Future<void> createBooking(BookingModel booking) async {

@@ -5,7 +5,7 @@ import '../../../services/auth_service.dart';
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
 class AuthProvider extends ChangeNotifier {
-  final AuthService _authService = AuthService();
+  late final AuthService _authService;
 
   AuthStatus _status = AuthStatus.unknown;
   UserModel?  _user;
@@ -18,7 +18,8 @@ class AuthProvider extends ChangeNotifier {
   bool       get isLoading    => _isLoading;
   bool       get isAuth       => _status == AuthStatus.authenticated;
 
-  AuthProvider() {
+  AuthProvider({AuthService? service}) {
+    _authService = service ?? AuthService();
     _authService.authStateChanges.listen((firebaseUser) async {
       if (firebaseUser == null) {
         _status = AuthStatus.unauthenticated;

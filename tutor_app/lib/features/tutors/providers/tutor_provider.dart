@@ -16,7 +16,7 @@ extension TutorSortLabel on TutorSort {
 }
 
 class TutorProvider extends ChangeNotifier {
-  final TutorService _service = TutorService();
+  late final TutorService _service;
 
   List<TutorModel> _allTutors       = [];
   String           _searchQuery     = '';
@@ -66,7 +66,8 @@ class TutorProvider extends ChangeNotifier {
     return subjects.toList();
   }
 
-  TutorProvider() {
+  TutorProvider({TutorService? service}) {
+    _service = service ?? TutorService();
     _listenToTutors();
   }
 
