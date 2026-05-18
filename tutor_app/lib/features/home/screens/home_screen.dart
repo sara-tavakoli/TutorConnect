@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../models/booking_model.dart';
+import '../../../services/booking_service.dart';
 import '../../tutors/screens/tutor_feed_screen.dart';
 import '../../bookings/screens/bookings_screen.dart';
 import '../../map/screens/map_screen.dart';
@@ -25,12 +27,11 @@ class _HomeScreenState extends State<HomeScreen> {
     ProfileScreen(),
   ];
 
-  //Add the Map tab to the bottom navigation.
-
   @override
   Widget build(BuildContext context) {
     final auth    = context.watch<AuthProvider>();
-    final isTutor = auth.user?.isTutor ?? false;
+    final user    = auth.user;
+    final isTutor = user?.isTutor ?? false;
 
     return Scaffold(
       body: IndexedStack(
@@ -66,13 +67,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   selected:   _currentIndex == 1,
                   onTap: () => setState(() => _currentIndex = 1),
                 ),
-                _NavItem(
-                  icon:       Icons.calendar_today_outlined,
-                  activeIcon: Icons.calendar_today_rounded,
-                  label:      isTutor ? 'Requests' : 'Bookings',
-                  selected:   _currentIndex == 2,
-                  onTap: () => setState(() => _currentIndex = 2),
-                ),
+                // Bookings tab with live badge
+                if (user != null)
+                  StreamBuilder<List<BookingModel>>(
+                    stream: isTutor
+                        ? BookingService().getBookingsForTutor(user.uid)
+                        : BookingService().getBookingsForStudent(user.uid),
+                    builder: (context, snap) {
+                      final bookings = snap.data ?? [];
+                      final badgeCount = isTutor
+                          ? bookings.where((b) => b.isPending).length
+                          : bookings
+                              .where((b) => b.isPending || b.isConfirmed)
+                              .length;
+                      return _NavItem(
+                        icon:       Icons.calendar_today_outlined,
+                        activeIcon: Icons.calendar_today_rounded,
+                        label:      isTutor ? 'Requests' : 'Bookings',
+                        selected:   _currentIndex == 2,
+                        badge:      badgeCount > 0 ? badgeCount : null,
+                        onTap: () => setState(() => _currentIndex = 2),
+                      );
+                    },
+                  )
+                else
+                  _NavItem(
+                    icon:       Icons.calendar_today_outlined,
+                    activeIcon: Icons.calendar_today_rounded,
+                    label:      'Bookings',
+                    selected:   _currentIndex == 2,
+                    onTap: () => setState(() => _currentIndex = 2),
+                  ),
                 _NavItem(
                   icon:       Icons.person_outline_rounded,
                   activeIcon: Icons.person_rounded,
@@ -90,11 +115,12 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _NavItem extends StatelessWidget {
-  final IconData   icon;
-  final IconData   activeIcon;
-  final String     label;
-  final bool       selected;
+  final IconData     icon;
+  final IconData     activeIcon;
+  final String       label;
+  final bool         selected;
   final VoidCallback onTap;
+  final int?         badge;
 
   const _NavItem({
     required this.icon,
@@ -102,6 +128,7 @@ class _NavItem extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.badge,
   });
 
   @override
@@ -122,12 +149,42 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              selected ? activeIcon : icon,
-              color: selected
-                  ? AppColors.primary
-                  : AppColors.grey400,
-              size: 22,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  selected ? activeIcon : icon,
+                  color: selected
+                      ? AppColors.primary
+                      : AppColors.grey400,
+                  size: 22,
+                ),
+                if (badge != null)
+                  Positioned(
+                    top: -4, right: -8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        borderRadius: AppRadius.fullAll,
+                        border: Border.all(
+                            color: AppColors.white, width: 1.5),
+                      ),
+                      constraints: const BoxConstraints(
+                          minWidth: 16, minHeight: 16),
+                      child: Text(
+                        badge! > 99 ? '99+' : '$badge',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.white,
+                          fontSize: 9,
+                          letterSpacing: 0,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 3),
             Text(
