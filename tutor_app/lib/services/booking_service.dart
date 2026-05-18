@@ -45,4 +45,16 @@ class BookingService {
   Future<void> deleteBooking(String bookingId) async {
     await _db.collection('bookings').doc(bookingId).delete();
   }
+
+  // True if the student has at least one completed session with a tutor
+  Future<bool> hasCompletedSession(String studentId, String tutorId) async {
+    final snap = await _db
+        .collection('bookings')
+        .where('studentId', isEqualTo: studentId)
+        .where('tutorId',   isEqualTo: tutorId)
+        .where('status',    isEqualTo: BookingStatus.completed.name)
+        .limit(1)
+        .get();
+    return snap.docs.isNotEmpty;
+  }
 }
