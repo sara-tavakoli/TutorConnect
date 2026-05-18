@@ -210,12 +210,12 @@ class _BookingList extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              if (wasConfirmed) {
-                provider.releaseSlot(bookingId, tutorId, slot, BookingStatus.cancelled);
-              } else {
-                provider.updateStatus(bookingId, BookingStatus.cancelled);
-              }
+              final messenger = ScaffoldMessenger.of(context);
+              provider.releaseSlot(bookingId, tutorId, slot, BookingStatus.cancelled);
               Navigator.pop(context);
+              messenger.showSnackBar(
+                const SnackBar(content: Text('Session cancelled')),
+              );
             },
             child: const Text('Cancel session',
                 style: TextStyle(color: AppColors.error)),
