@@ -13,9 +13,10 @@ class BookingService {
   Future<void> createBooking(BookingModel booking) async {
     final batch = _db.batch();
     batch.set(_db.collection('bookings').doc(), booking.toMap());
-    batch.update(
+    batch.set(
       _db.collection('tutors').doc(booking.tutorId),
       {'bookedSlots': FieldValue.arrayUnion([booking.slot])},
+      SetOptions(merge: true),
     );
     await batch.commit();
   }
