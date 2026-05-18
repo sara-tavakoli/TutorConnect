@@ -9,7 +9,9 @@ import '../../../models/booking_model.dart';
 //Shows all bookings split into Upcoming and Past tabs. Tutors see confirm/cancel buttons; students only see cancel.
 
 class BookingsScreen extends StatefulWidget {
-  const BookingsScreen({super.key});
+  // testProvider is only used in widget tests to inject a pre-populated provider
+  final BookingProvider? testProvider;
+  const BookingsScreen({super.key, this.testProvider});
 
   @override
   State<BookingsScreen> createState() => _BookingsScreenState();
@@ -24,15 +26,17 @@ class _BookingsScreenState extends State<BookingsScreen>
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 2, vsync: this);
-    _bookingProvider = BookingProvider();
+    _bookingProvider = widget.testProvider ?? BookingProvider();
 
-    // Init with current user's uid and role
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final auth = context.read<AuthProvider>();
-      if (auth.user != null) {
-        _bookingProvider.init(auth.user!.uid, auth.user!.role);
-      }
-    });
+    // Init with current user's uid and role (skip when test provider injected)
+    if (widget.testProvider == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final auth = context.read<AuthProvider>();
+        if (auth.user != null) {
+          _bookingProvider.init(auth.user!.uid, auth.user!.role);
+        }
+      });
+    }
   }
 
   @override
