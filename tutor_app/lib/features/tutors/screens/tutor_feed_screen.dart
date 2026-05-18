@@ -10,10 +10,18 @@ import '../../../features/map/screens/map_screen.dart';
 import 'tutor_detail_screen.dart';
 
 class TutorFeedScreen extends StatelessWidget {
-  const TutorFeedScreen({super.key});
+  // testProvider is only used in widget tests to inject a fake TutorProvider
+  final TutorProvider? testProvider;
+  const TutorFeedScreen({super.key, this.testProvider});
 
   @override
   Widget build(BuildContext context) {
+    if (testProvider != null) {
+      return ChangeNotifierProvider.value(
+        value: testProvider!,
+        child: const _TutorFeedView(),
+      );
+    }
     return ChangeNotifierProvider(
       create: (_) => TutorProvider(),
       child: const _TutorFeedView(),
