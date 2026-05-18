@@ -141,13 +141,15 @@ class TutorDetailScreen extends StatelessWidget {
                       child: AppButton(
                         label:
                             'Book a session · \$${tutor.hourlyRate.toStringAsFixed(0)}/hr',
-                        onPressed: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) =>
-                              BookSessionSheet(tutor: tutor),
-                        ),
+                        onPressed: (tutor.subjects.isEmpty || tutor.availability.isEmpty)
+                            ? null
+                            : () => showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (_) =>
+                                    BookSessionSheet(tutor: tutor),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -312,7 +314,7 @@ class _StatsRow extends StatelessWidget {
         _Stat(
           icon: Icons.star_rounded,
           iconColor: AppColors.accent,
-          value: tutor.rating.toStringAsFixed(1),
+          value: tutor.reviewCount == 0 ? '—' : tutor.rating.toStringAsFixed(1),
           label: 'Rating',
         ),
         _divider(),
@@ -492,7 +494,10 @@ class _ReviewGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: BookingService().hasCompletedSession(studentId, tutorId),
+      future: Future.wait([
+        BookingService().hasCompletedSession(studentId, tutorId),
+        ReviewService().hasReviewed(tutorId: tutorId, studentId: studentId),
+      ]).then((results) => results[0] && !results[1]),
       builder: (context, snap) {
         final canReview = snap.data ?? false;
 
