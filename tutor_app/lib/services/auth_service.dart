@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 
+/// Wraps Firebase Auth and Firestore for all authentication and user-profile operations.
 class AuthService {
   final FirebaseAuth _auth;
   final FirebaseFirestore _db;
@@ -10,9 +11,12 @@ class AuthService {
       : _auth = auth ?? FirebaseAuth.instance,
         _db = db ?? FirebaseFirestore.instance;
 
+  /// Emits a [User] whenever sign-in state changes (login, logout, token refresh).
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
 
+  /// Creates a Firebase Auth account, writes a Firestore user doc, and
+  /// (for tutors) creates the matching tutor profile document.
   Future<UserModel> register({
     required String name,
     required String email,
@@ -52,6 +56,7 @@ class AuthService {
     return user;
   }
 
+  /// Signs in with email/password and returns the matching Firestore user profile.
   Future<UserModel> signIn({
     required String email,
     required String password,
@@ -71,6 +76,7 @@ class AuthService {
 
   Future<void> signOut() => _auth.signOut();
 
+  /// Fetches the Firestore user profile for [uid]. Returns null if not found.
   Future<UserModel?> fetchUser(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
     if (!doc.exists) return null;

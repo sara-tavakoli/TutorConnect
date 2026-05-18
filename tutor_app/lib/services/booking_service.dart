@@ -9,12 +9,12 @@ class BookingService {
   BookingService({FirebaseFirestore? db})
       : _db = db ?? FirebaseFirestore.instance;
 
-  // Create a new booking
+  /// Writes a new booking document to Firestore.
   Future<void> createBooking(BookingModel booking) async {
     await _db.collection('bookings').add(booking.toMap());
   }
 
-  // Stream bookings where user is the student
+  /// Real-time stream of all bookings where [studentId] is the student.
   Stream<List<BookingModel>> getBookingsForStudent(String studentId) {
     return _db
         .collection('bookings')
@@ -25,7 +25,7 @@ class BookingService {
             .toList());
   }
 
-  // Stream bookings where user is the tutor
+  /// Real-time stream of all bookings where [tutorId] is the tutor.
   Stream<List<BookingModel>> getBookingsForTutor(String tutorId) {
     return _db
         .collection('bookings')
@@ -36,7 +36,7 @@ class BookingService {
             .toList());
   }
 
-  // Update booking status (confirm / cancel / complete)
+  /// Updates only the status field on a booking (for simple transitions with no slot change).
   Future<void> updateStatus(String bookingId, BookingStatus status) async {
     await _db
         .collection('bookings')
@@ -74,12 +74,13 @@ class BookingService {
     await batch.commit();
   }
 
-  // Delete a booking
+  /// Permanently deletes a booking document.
   Future<void> deleteBooking(String bookingId) async {
     await _db.collection('bookings').doc(bookingId).delete();
   }
 
-  // True if the student has at least one completed session with a tutor
+  /// Returns true if [studentId] has at least one completed session with [tutorId].
+  /// Used to gate the "Leave a Review" feature.
   Future<bool> hasCompletedSession(String studentId, String tutorId) async {
     final snap = await _db
         .collection('bookings')
