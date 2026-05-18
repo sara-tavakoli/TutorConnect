@@ -6,6 +6,7 @@ import '../widgets/subject_filter_chips.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/skeleton_card.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../features/map/screens/map_screen.dart';
 import 'tutor_detail_screen.dart';
 
 class TutorFeedScreen extends StatelessWidget {
@@ -45,6 +46,28 @@ class _TutorFeedView extends StatelessWidget {
               surfaceTintColor: Colors.transparent,
               elevation: 0,
               expandedHeight: 120,
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: IconButton(
+                    tooltip: 'Map view',
+                    icon: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppColors.primarySurface,
+                        borderRadius: AppRadius.mdAll,
+                      ),
+                      child: const Icon(Icons.map_rounded,
+                          color: AppColors.primary, size: 20),
+                    ),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const MapScreen()),
+                    ),
+                  ),
+                ),
+              ],
               flexibleSpace: FlexibleSpaceBar(
                 titlePadding:
                     const EdgeInsets.fromLTRB(24, 0, 24, 16),
