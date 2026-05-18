@@ -162,6 +162,7 @@ class _EditTutorProfileScreenState
                 hint: 'Tell students about yourself…',
                 controller: _bioCtrl,
                 maxLines: 4,
+                maxLength: 300,
                 validator: (v) =>
                     v == null || v.trim().isEmpty
                         ? 'Bio is required.' : null,
@@ -175,10 +176,11 @@ class _EditTutorProfileScreenState
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.attach_money_rounded,
                 validator: (v) {
-                  if (v == null || v.isEmpty)
-                    return 'Rate is required.';
-                  if (double.tryParse(v) == null)
-                    return 'Enter a valid number.';
+                  if (v == null || v.isEmpty) return 'Rate is required.';
+                  final rate = double.tryParse(v);
+                  if (rate == null) return 'Enter a valid number.';
+                  if (rate < 5) return 'Rate must be at least \$5.';
+                  if (rate > 500) return 'Rate cannot exceed \$500.';
                   return null;
                 },
               ),

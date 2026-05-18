@@ -11,6 +11,7 @@ class AppTextField extends StatefulWidget {
   final IconData? prefixIcon;
   final Widget? suffix;
   final int maxLines;
+  final int? maxLength;
   final TextInputAction textInputAction;
   final FocusNode? focusNode;
   final VoidCallback? onEditingComplete;
@@ -26,6 +27,7 @@ class AppTextField extends StatefulWidget {
     this.prefixIcon,
     this.suffix,
     this.maxLines = 1,
+    this.maxLength,
     this.textInputAction = TextInputAction.next,
     this.focusNode,
     this.onEditingComplete,
@@ -52,6 +54,7 @@ class _AppTextFieldState extends State<AppTextField> {
           keyboardType: widget.keyboardType,
           validator: widget.validator,
           maxLines: widget.isPassword ? 1 : widget.maxLines,
+          maxLength: widget.maxLength,
           textInputAction: widget.textInputAction,
           onEditingComplete: widget.onEditingComplete,
           style: AppTextStyles.bodyLarge.copyWith(color: AppColors.grey900),
