@@ -4,7 +4,10 @@ import '../models/booking_model.dart';
 /// Handles all Firestore operations for bookings — create, read, update status, delete.
 
 class BookingService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  BookingService({FirebaseFirestore? db})
+      : _db = db ?? FirebaseFirestore.instance;
 
   // Create a new booking
   Future<void> createBooking(BookingModel booking) async {

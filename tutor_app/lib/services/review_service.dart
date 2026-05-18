@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/review_model.dart';
 
 class ReviewService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  ReviewService({FirebaseFirestore? db})
+      : _db = db ?? FirebaseFirestore.instance;
 
   // Add a review and update tutor's average rating
   Future<void> addReview(ReviewModel review) async {

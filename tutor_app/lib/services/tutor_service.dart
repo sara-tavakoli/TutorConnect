@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/tutor_model.dart';
 
 class TutorService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  TutorService({FirebaseFirestore? db})
+      : _db = db ?? FirebaseFirestore.instance;
 
   Stream<List<TutorModel>> getTutors() {
     return _db.collection('tutors').snapshots().map((snap) =>
