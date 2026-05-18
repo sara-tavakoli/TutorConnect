@@ -4,11 +4,14 @@ import '../../auth/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/booking_model.dart';
 import '../../../services/booking_service.dart';
+import '../../dashboard/screens/dashboard_screen.dart';
 import '../../tutors/screens/tutor_feed_screen.dart';
 import '../../bookings/screens/bookings_screen.dart';
 import '../../map/screens/map_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 
+// Tab indices
+// 0 = Dashboard, 1 = Browse, 2 = Map, 3 = Bookings, 4 = Profile
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,11 +23,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  static const List<Widget> _pages = [
-    TutorFeedScreen(),
-    MapScreen(),
-    BookingsScreen(),
-    ProfileScreen(),
+  void _navigateTo(int index) => setState(() => _currentIndex = index);
+
+  List<Widget> get _pages => [
+    DashboardScreen(onNavigate: _navigateTo),
+    const TutorFeedScreen(),
+    const MapScreen(),
+    const BookingsScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -41,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppColors.white,
-          border: Border(
+          border: const Border(
             top: BorderSide(color: AppColors.grey100, width: 1),
           ),
           boxShadow: AppShadows.sm,
@@ -54,20 +60,27 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _NavItem(
+                  icon:       Icons.home_outlined,
+                  activeIcon: Icons.home_rounded,
+                  label:      'Home',
+                  selected:   _currentIndex == 0,
+                  onTap: () => setState(() => _currentIndex = 0),
+                ),
+                _NavItem(
                   icon:       Icons.search_rounded,
                   activeIcon: Icons.search_rounded,
                   label:      'Browse',
-                  selected:   _currentIndex == 0,
-                  onTap: () => setState(() => _currentIndex = 0),
+                  selected:   _currentIndex == 1,
+                  onTap: () => setState(() => _currentIndex = 1),
                 ),
                 _NavItem(
                   icon:       Icons.map_outlined,
                   activeIcon: Icons.map_rounded,
                   label:      'Map',
-                  selected:   _currentIndex == 1,
-                  onTap: () => setState(() => _currentIndex = 1),
+                  selected:   _currentIndex == 2,
+                  onTap: () => setState(() => _currentIndex = 2),
                 ),
-                // Bookings tab with live badge
+                // Bookings tab with live pending badge
                 if (user != null)
                   StreamBuilder<List<BookingModel>>(
                     stream: isTutor
@@ -84,9 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon:       Icons.calendar_today_outlined,
                         activeIcon: Icons.calendar_today_rounded,
                         label:      isTutor ? 'Requests' : 'Bookings',
-                        selected:   _currentIndex == 2,
+                        selected:   _currentIndex == 3,
                         badge:      badgeCount > 0 ? badgeCount : null,
-                        onTap: () => setState(() => _currentIndex = 2),
+                        onTap: () => setState(() => _currentIndex = 3),
                       );
                     },
                   )
@@ -95,15 +108,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon:       Icons.calendar_today_outlined,
                     activeIcon: Icons.calendar_today_rounded,
                     label:      'Bookings',
-                    selected:   _currentIndex == 2,
-                    onTap: () => setState(() => _currentIndex = 2),
+                    selected:   _currentIndex == 3,
+                    onTap: () => setState(() => _currentIndex = 3),
                   ),
                 _NavItem(
                   icon:       Icons.person_outline_rounded,
                   activeIcon: Icons.person_rounded,
                   label:      'Profile',
-                  selected:   _currentIndex == 3,
-                  onTap: () => setState(() => _currentIndex = 3),
+                  selected:   _currentIndex == 4,
+                  onTap: () => setState(() => _currentIndex = 4),
                 ),
               ],
             ),
