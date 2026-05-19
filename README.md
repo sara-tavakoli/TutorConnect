@@ -2,17 +2,16 @@
 
 ### Find the right tutor. Book in seconds.
 
-TutorConnect is a Flutter mobile application that connects university students with peer tutors for one-on-one study sessions. Students can browse verified tutor profiles, filter by subject, check real-time availability, book a session, and chat directly with their tutor — all from a single app. Tutors manage their own profiles, set their subjects and hourly rates, and handle incoming session requests through a dedicated dashboard.
+TutorConnect is a Flutter mobile application that connects university students with peer tutors for one-on-one study sessions. Students can browse verified tutor profiles, filter by subject, check real-time availability, book a session, and chat directly with their tutor all from a single app. Tutors manage their own profiles, set their subjects and hourly rates, and handle incoming session requests through a dedicated dashboard.
 
-The app was designed to solve a common problem on university campuses: finding quality peer tutoring is slow, fragmented, and usually word-of-mouth. TutorConnect brings everything into one place with a clean, modern interface backed by Firebase for real-time data sync and offline support.
+The app was designed to solve a common problem of finding quality peer tutoring is slow, fragmented, and usually word-of-mouth. TutorConnect brings everything into one place with a clean, modern interface backed by Firebase for real-time data sync and offline support.
 
----
 
 ## Features
 
-- **User authentication and role selection** — users register with their name, email, and password, and choose their role as either a Student or a Tutor at sign-up. The app remembers the session and returns returning users to the correct home screen automatically. Login errors such as wrong password, too many attempts, or a disabled account all display friendly messages.
+- **User authentication and role selection** - users register with their name, email, strong password, and choose their role as either a Student or a Tutor at sign-up. The app remembers the session and returns returning users to the correct home screen automatically. Login errors such as wrong password, too many attempts, or a disabled account all display friendly messages.
 
-- **Browse tutors feed** — students land on a scrollable feed of all available tutors. Each card shows the tutor's name, photo, subjects, hourly rate, star rating, and review count. Tutors with no reviews display a clear "No reviews" label instead of a misleading zero rating.
+- **Browse tutors feed** - students land on a scrollable feed of all available tutors. Each card shows the tutor's name, photo, subjects, hourly rate, star rating, and review count. Tutors with no reviews display a clear "No reviews" label instead of a misleading zero rating.
 
 - **Search and filter** — students can type in a search bar to narrow the list by tutor name or subject in real time. Subject filter chips across the top of the feed let students tap a subject like "Maths" or "English" to instantly filter to tutors who teach it. Typing a search term with no matching tutors shows a clear empty state message.
 
@@ -26,7 +25,7 @@ The app was designed to solve a common problem on university campuses: finding q
 
 - **Booking management for tutors** — tutors see the same screen labelled "Session Requests". They can confirm a pending booking, which locks the slot in their profile and notifies the system. They can also cancel sessions. Marking a session as done moves it to the Past tab and unlocks the student's ability to leave a review.
 
-- **Real-time chat** — every tutor profile has a Message button that opens a direct one-to-one conversation. Messages send and appear instantly using Firestore real-time streams. The chat list screen shows all active conversations with the other person's name, last message, and unread message count. Unread counts reset when the conversation is opened.
+- **Real-time chat** — both students and tutors can message each other directly. Students initiate a conversation from the Message button on a tutor's profile, and tutors can reply from their Messages tab. Messages send and appear instantly using Firestore real-time streams. Both sides see a chat list screen showing all active conversations with the other person's name, last message, and unread message count. Unread counts reset when the conversation is opened.
 
 - **Leave a review** — after a tutor marks a session as complete, a "Leave a Review" button appears on the tutor's profile for that student. The student picks a star rating from one to five and writes a comment. The tutor's overall rating and review count update instantly. The review button is hidden if the student has already submitted a review for that tutor, preventing duplicates. Students can delete their own reviews.
 
