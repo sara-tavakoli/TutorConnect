@@ -31,7 +31,7 @@ The app was designed to solve a common problem of finding quality peer tutoring 
 
 - **Tutor profile editing** — tutors access an Edit Profile screen from their profile page where they can update their bio (with a 300-character counter), university, year of study, hourly rate (validated between $5 and $500), a list of subjects they teach, and their weekly availability slots. Changes are saved to Firestore and reflected immediately across the app.
 
-- **Profile photo upload** — tutors can upload a profile photo from their device. The image is stored in Firebase Storage and displayed throughout the app using cached network images for fast load times.
+- **Profile photo upload** — tutors can upload a profile photo from their device gallery or camera. The image is uploaded to Cloudinary and the returned URL is saved to the tutor's Firestore profile, then displayed throughout the app using cached network images for fast load times.
 
 - **Student profile screen** — students see their name, email, and account role on their profile screen. A logout button in the app bar opens a confirmation dialog before signing out, preventing accidental logouts.
 
@@ -41,13 +41,13 @@ The app was designed to solve a common problem of finding quality peer tutoring 
 
 - **Role-based navigation** — the bottom navigation bar shows different tabs depending on whether the user is a student or a tutor. Students see Browse, Bookings, Messages, and Profile. Tutors see Dashboard, Bookings, Messages, and Profile.
 
----
+
 
 ## Users
 
 ### Students
 
-University students who need help with one or more subjects. They use TutorConnect to find a suitable peer tutor quickly, see pricing and availability upfront, and book without back-and-forth messaging. They value trust signals like ratings and reviews, and the ability to message a tutor before committing.
+Students who need help with one or more subjects. They use TutorConnect to find a suitable peer tutor quickly, see pricing and availability upfront, and book without back-and-forth messaging. They value trust signals like ratings and reviews, and the ability to message a tutor before committing.
 
 **Persona — Alex, 2nd year Engineering:** Alex is struggling with Calculus mid-semester and needs help before his upcoming exam. He opens TutorConnect, types "Maths" in the search bar, and instantly sees tutors who teach it. He taps Alice's profile, reads her bio, sees she is rated 4.8 stars with 10 reviews, and notices her Monday 9am slot is still free. He books it in two taps, sends her a quick message to confirm the location, and after the session he leaves a five-star review.
 
@@ -57,7 +57,6 @@ High-achieving students who want to earn money sharing their knowledge. They use
 
 **Persona — Alice, 3rd year Mathematics:** Alice wants to earn money between lectures. She creates a tutor profile, adds Maths and Physics as her subjects, sets her rate at $40 per hour, and marks Monday 9am and Wednesday 2pm as available. When Alex books her, she gets the request in her Bookings tab, confirms it, and chats with him about where to meet. After the session she marks it as done, which releases her availability for that slot again and lets Alex leave a review.
 
----
 
 ## Technical Details
 
@@ -65,16 +64,16 @@ High-achieving students who want to earn money sharing their knowledge. They use
 
 Two pre-seeded accounts are available for marking without registration:
 
-- **Student account** — email: `student@test.com`, password: `password123`
-- **Tutor account** — email: `tutor@test.com`, password: `password123`
+- **Student account** — email: `student@test.com`, password: `123456`
+- **Tutor account** — email: `sara@test.com`, password: `123456`
 
 ### Technology Stack
 
-The app is built with **Flutter** and **Dart**. The backend uses **Firebase Authentication** for login and registration, **Cloud Firestore** for all real-time data, and **Firebase Storage** for profile photo uploads. State management is handled with the **Provider** package. Maps are powered by **Google Maps Flutter**. Images are cached using the **cached_network_image** package for smooth scrolling performance.
+The app is built with **Flutter** and **Dart**. The backend uses **Firebase Authentication** for login and registration and **Cloud Firestore** for all real-time data. Profile photos are uploaded to **Cloudinary** via a multipart HTTP request, with the returned URL stored in Firestore. State management is handled with the **Provider** package. Maps are powered by the **Google Maps API** via the `google_maps_flutter` package. Images are cached using the **cached_network_image** package for smooth scrolling performance.
 
 ### Project Structure
 
-The codebase is organised into feature-based folders under `lib/features/`, each containing its own screens, providers, and widgets. Shared UI components such as `AppButton` and `AppTextField` live in `lib/core/`. Data models are in `lib/models/` and all Firestore and Firebase interactions are encapsulated in service classes under `lib/services/`. Tests are in `test/` and mirror the same structure — models, providers, services, and widgets each have their own subfolder.
+The codebase is organised into feature-based folders under `lib/features/`, each containing its own screens, providers, and widgets. Shared UI components such as `AppButton` and `AppTextField` live in `lib/core/`. Data models are in `lib/models/` and all Firestore and Firebase interactions are encapsulated in service classes under `lib/services/`. Tests are in `test/` and mirror the same structure models, providers, services, and widgets each have their own subfolder.
 
 ### Test Suite
 
@@ -87,11 +86,10 @@ The project includes **194 automated tests** across four layers, all passing:
 
 To run the full test suite: navigate to the `tutor_app` directory and run `flutter test`.
 
----
 
-## Notes for Markers
+## Notes 
 
-- **Choosing a role** happens at registration — create a new account and select Student or Tutor, or use the test accounts above to skip registration.
+- **Choosing a role** happens at registration, create a new account and select Student or Tutor, or use the test accounts above to skip registration.
 - **Booking flow to test** — log in as the student, go to Browse, tap a tutor, select a slot, and book. Then log in as the tutor, go to Bookings, and confirm. Log back in as the student and the booking appears as confirmed in Upcoming.
 - **Review flow to test** — after the tutor marks the session done (the Mark Done button on the booking card), log back in as the student. The tutor's detail page will now show the Leave a Review button.
 - **Map screen** — accessible via the map icon in the top-right corner of the Browse screen. Requires location permissions to be granted on the device or simulator.
