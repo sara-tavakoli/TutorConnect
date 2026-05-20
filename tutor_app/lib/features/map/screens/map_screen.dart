@@ -20,6 +20,7 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _mapController;
   Position? _userPosition;
+  bool _locationGranted = false;
   TutorModel? _selectedTutor;
   final LocationService _locationService = LocationService();
 
@@ -35,7 +36,10 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _loadUserLocation() async {
     final position = await _locationService.getCurrentPosition();
     if (mounted) {
-      setState(() => _userPosition = position);
+      setState(() {
+        _userPosition = position;
+        _locationGranted = position != null;
+      });
       if (position != null && _mapController != null) {
         _mapController!.animateCamera(
           CameraUpdate.newLatLngZoom(
@@ -83,7 +87,7 @@ class _MapScreenState extends State<MapScreen> {
                   zoom: 14,
                 ),
                 markers: markers,
-                myLocationEnabled: true,
+                myLocationEnabled: _locationGranted,
                 myLocationButtonEnabled: false,
                 zoomControlsEnabled: false,
                 mapToolbarEnabled: false,
