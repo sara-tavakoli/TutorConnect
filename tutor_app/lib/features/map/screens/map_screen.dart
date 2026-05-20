@@ -22,18 +22,28 @@ class _MapScreenState extends State<MapScreen> {
   Position? _userPosition;
   bool _locationGranted = false;
   TutorModel? _selectedTutor;
+  bool _hasFittedToTutors = false;
   final LocationService _locationService = LocationService();
 
-  // Default to Sydney if no location
   static const _defaultTarget = LatLng(-33.8688, 151.2093);
 
   @override
   void initState() {
     super.initState();
-    _loadUserLocation();
+    _initLocation();
   }
 
-  Future<void> _loadUserLocation() async {
+  Future<void> _initLocation() async {
+    final position = await _locationService.getCurrentPosition();
+    if (mounted) {
+      setState(() {
+        _userPosition = position;
+        _locationGranted = position != null;
+      });
+    }
+  }
+
+  Future<void> _goToMyLocation() async {
     final position = await _locationService.getCurrentPosition();
     if (mounted) {
       setState(() {
@@ -49,6 +59,45 @@ class _MapScreenState extends State<MapScreen> {
         );
       }
     }
+  }
+
+  void _fitToTutors(List<TutorModel> tutors) {
+    final located = tutors.where((t) => t.hasLocation).toList();
+    if (located.isEmpty || _mapController == null || _hasFittedToTutors) return;
+
+    _hasFittedToTutors = true;
+
+    if (located.length == 1) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(located.first.latitude!, located.first.longitude!),
+          14,
+        ),
+      );
+      return;
+    }
+
+    var minLat = located.first.latitude!;
+    var maxLat = located.first.latitude!;
+    var minLng = located.first.longitude!;
+    var maxLng = located.first.longitude!;
+
+    for (final t in located.skip(1)) {
+      if (t.latitude! < minLat) minLat = t.latitude!;
+      if (t.latitude! > maxLat) maxLat = t.latitude!;
+      if (t.longitude! < minLng) minLng = t.longitude!;
+      if (t.longitude! > maxLng) maxLng = t.longitude!;
+    }
+
+    _mapController!.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+          southwest: LatLng(minLat, minLng),
+          northeast: LatLng(maxLat, maxLng),
+        ),
+        80,
+      ),
+    );
   }
 
   Set<Marker> _buildMarkers(List<TutorModel> tutors) {
@@ -74,16 +123,14 @@ class _MapScreenState extends State<MapScreen> {
         final tutors = provider.allTutors;
         final markers = _buildMarkers(tutors);
 
+        WidgetsBinding.instance.addPostFrameCallback((_) => _fitToTutors(tutors));
+
         return Scaffold(
           body: Stack(
             children: [
-              // Google Map
               GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: _userPosition != null
-                      ? LatLng(
-                          _userPosition!.latitude, _userPosition!.longitude)
-                      : _defaultTarget,
+                initialCameraPosition: const CameraPosition(
+                  target: _defaultTarget,
                   zoom: 14,
                 ),
                 markers: markers,
@@ -93,15 +140,7 @@ class _MapScreenState extends State<MapScreen> {
                 mapToolbarEnabled: false,
                 onMapCreated: (ctrl) {
                   _mapController = ctrl;
-                  if (_userPosition != null) {
-                    ctrl.animateCamera(
-                      CameraUpdate.newLatLngZoom(
-                        LatLng(
-                            _userPosition!.latitude, _userPosition!.longitude),
-                        14,
-                      ),
-                    );
-                  }
+                  _fitToTutors(tutors);
                 },
                 onTap: (_) => setState(() => _selectedTutor = null),
               ),
@@ -134,7 +173,7 @@ class _MapScreenState extends State<MapScreen> {
                     const SizedBox(width: 10),
                     // My location button
                     GestureDetector(
-                      onTap: _loadUserLocation,
+                      onTap: _goToMyLocation,
                       child: Container(
                         width: 44,
                         height: 44,
