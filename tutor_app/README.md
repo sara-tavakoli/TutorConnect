@@ -1,17 +1,30 @@
-# tutor_app
+# TutorConnect
 
-A new Flutter project.
+A Flutter peer-tutoring app that connects university students with peer tutors.
 
-## Getting Started
+## Test Accounts
 
-This project is a starting point for a Flutter application.
+Student — email: student@test.com, password: 123456
 
-A few resources to get you started if this is your first Flutter project:
+Tutor — email: sara@test.com, password: 123456
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- Sign in as the student to browse tutors book sessions, send messages, and leave reviews.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Sign in as the tutor to manage the profile, confirm bookings, mark sessions complete, and view the dashboard.
+
+You can also register a new account and choose a role (Student or Tutor) at sign-up.
+
+## Running the app
+
+```
+flutter pub get
+flutter run
+```
+
+## Running tests
+
+```
+flutter test
+```
+
+For full app documentation see the [project README](../README.md).
